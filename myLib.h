@@ -231,6 +231,7 @@ extern unsigned short buttons;
 // Button Macros
 #define BUTTON_HELD(key) (~(BUTTONS) & (key))
 #define BUTTON_PRESSED(key) ((!(~(oldButtons) & (key))) && (~(buttons) & (key)))
+#define BUTTON_RELEASED(key) (((~(oldButtons) & (key))) && !(~(buttons) & (key)))
 
 //"booleans"
 #define true 1

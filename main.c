@@ -108,22 +108,19 @@ void game() {
     drawGame();
     waitForVBlank();
     copyShadowOAM();
-    if (shouldwin) {
-        goToWin();
-    } else if (shouldLose) {
-        goToLose();
-    } else if (BUTTON_PRESSED(BUTTON_START)) {
-        goToPause();
-    }
+    // if (shouldwin) {
+    //     goToWin();
+    // } else if (shouldLose) {
+    //     goToLose();
+    // } else if (BUTTON_PRESSED(BUTTON_START)) {
+    //     goToPause();
+    // }
 }
 
 // Sets up the pause state
 void goToPause() {
     //sets up background for pause screen
     REG_BG0CNT = BG_CHARBLOCK(0) | BG_4BPP | BG_SIZE_SMALL | BG_SCREENBLOCK(24);
-    copyToBGPaletteMem(pausescreenPal, pausescreenPalLen >> 1);
-    copyToCharBlock(pausescreenTiles, 0, pausescreenTilesLen >> 1);
-    copyToScreenBlock(pausescreenMap, 24, pausescreenMapLen >> 1);
     hideSprites();
     copyShadowOAM();
     state = PAUSE;
@@ -149,7 +146,7 @@ void goToWin() {
 
 // Runs every frame of the win state
 void win() {
-    updateWin();
+    //updateWin();
     if (BUTTON_PRESSED(BUTTON_START)) {
         goToStart();
     }

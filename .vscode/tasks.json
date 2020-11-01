@@ -6,7 +6,7 @@
         {
             "label": "build run",
             "type": "shell",
-            "command": "D:/Bigger-GitHub-Projects/GitHub/CS2261-Labs/visualboyadvance-m.exe ./Project.gba",
+            "command": "open /Users/danielotaigbe/Documents/GitHub-Projects/Sonic-GBA/visualboyadvance-m.app  ./Project.gba",
             // add the visualboyadvance-m.app exact path to the above line,
             // in between "open" and "./Project.gba"!
             "problemMatcher": [],
