@@ -28,6 +28,7 @@ extern SONIC player;
 void initializeSonic();
 void drawSonic();
 void updateSonic();
+void checkCollisionWithMap();
 # 2 "sonic.c" 2
 # 1 "myLib.h" 1
 
@@ -146,13 +147,17 @@ extern const unsigned short sonicSpriteTiles[16384];
 
 extern const unsigned short sonicSpritePal[256];
 # 4 "sonic.c" 2
+# 1 "testcollisionmap.h" 1
+# 20 "testcollisionmap.h"
+extern const unsigned short testcollisionmapBitmap[38400];
+# 5 "sonic.c" 2
 
 SONIC player;
 
 void initializeSonic() {
     copyToSpritePaletteMem(sonicSpritePal, 512 >> 1);
     copyToCharBlock(sonicSpriteTiles, 4, 32768 >> 1);
-    player.height = 64 << 6;
+    player.height = 32 << 6;
     player.width = 32 << 6;
 }
 
@@ -210,14 +215,14 @@ void updateSonic() {
             }
         }
         if (player.colVelocity < 0) {
-            player.colVelocity -= (int)(0.046875 * 64);
+            player.colVelocity += (int)(0.046875 * 64);
             if (player.colVelocity > 0) {
                 player.colVelocity = 0;
             }
         }
 
     }
-    if (((!(~(oldButtons) & ((1<<0)))) && (~(buttons) & ((1<<0))))) {
+    if (((!(~(oldButtons) & ((1<<0)))) && (~(buttons) & ((1<<0)))) && player.grounded) {
         player.grounded = 0;
 
         player.rowVelocity = player.rowVelocity - (int)(6.5 * 64);
@@ -232,9 +237,22 @@ void updateSonic() {
 
     if (player.worldCol < 0) {
         player.worldCol = 0;
+        if (player.colVelocity != 0) {
+            player.colVelocity = 0;
+        }
     }
     if (player.worldCol + player.width > 240 * 64) {
         player.worldCol = ((240 * 64) - player.colVelocity) - (player.width - player.colVelocity);
+        if (player.colVelocity != 0) {
+            player.colVelocity = 0;
+        }
+    }
+
+    if (player.worldRow < 0) {
+        player.worldRow = 0;
+        if (player.rowVelocity != 0) {
+            player.rowVelocity = 0;
+        }
     }
 
     if (player.worldRow + player.height > 160 * 64 && !player.grounded) {
@@ -244,6 +262,8 @@ void updateSonic() {
         player.rowVelocity += (int)(0.21875 * 64);
     }
 
+    checkCollisionWithMap();
+
     if (player.grounded) {
         player.rowVelocity = 0;
     }
@@ -252,9 +272,52 @@ void updateSonic() {
     player.worldRow += player.rowVelocity;
 }
 
+void checkCollisionWithMap() {
+    if (player.colVelocity > 0) {
+        for (int i = player.worldCol / 64; i < (player.worldCol + player.colVelocity)/64; i++) {
+            if (testcollisionmapBitmap[((player.worldRow/64)*(240)+(i + (player.width / 64) - 1))] == 0x7FFF
+            && testcollisionmapBitmap[(((player.worldRow/64) + (player.height/64) - 1)*(240)+(i + (player.width / 64) - 1))] == 0x7FFF) {
+                continue;
+            } else {
+                player.colVelocity = ((i * 64) - player.worldCol);
+                player.worldCol += player.colVelocity;
+                player.colVelocity = 0;
+            }
+        }
+    }
+    if (player.colVelocity < 0) {
+        for (int i = player.worldCol / 64; i > (player.worldCol + player.colVelocity)/64; i--) {
+            if (testcollisionmapBitmap[((player.worldRow/64)*(240)+(i))] == 0x7FFF
+            && testcollisionmapBitmap[(((player.worldRow/64) + (player.height/64) - 1)*(240)+(i))] == 0x7FFF) {
+                continue;
+            } else {
+                player.colVelocity = ((i * 64) - player.worldCol);
+            }
+        }
+    }
+
+    if (player.rowVelocity > 0) {
+        for (int i = player.worldRow / 64; i < (player.worldRow + player.rowVelocity)/64; i++) {
+            if (testcollisionmapBitmap[((i + (player.height/64) - 1)*(240)+(player.worldCol/64))] == 0x7FFF
+            && testcollisionmapBitmap[((i + (player.height/64) - 1)*(240)+((player.worldCol/64) + (player.width / 64) - 1))] == 0x7FFF) {
+                continue;
+            } else {
+                player.rowVelocity = ((i * 64) - player.worldRow);
+                player.grounded = 1;
+            }
+        }
+    } else {
+        if (testcollisionmapBitmap[(((player.worldRow/64) + 1 + (player.height/64) - 1)*(240)+(player.worldCol/64))] != 0x7FFF
+            && testcollisionmapBitmap[(((player.worldRow/64) + 1 + (player.height/64) - 1)*(240)+((player.worldCol/64) + (player.width / 64) - 1))] != 0x7FFF) {
+                player.grounded = 0;
+        }
+    }
+# 178 "sonic.c"
+}
+
 void drawSonic() {
-    shadowOAM[0].attr0 = (0xFF & (int)(player.worldRow/64)) | (2 << 14) | (0 << 13) | (0 << 8);
- shadowOAM[0].attr1 = (0x1FF & (int)(player.worldCol / 64)) | (3 << 14);
+    shadowOAM[0].attr0 = (0xFF & (int)(player.worldRow/64)) | (0 << 14) | (0 << 13) | (0 << 8);
+ shadowOAM[0].attr1 = (0x1FF & (int)(player.worldCol / 64)) | (2 << 14);
 
     if (player.flip) {
         shadowOAM[0].attr1 |= (1 << 12);

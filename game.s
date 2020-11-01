@@ -75,6 +75,49 @@ drawGame:
 	.word	drawSonic
 	.size	drawGame, .-drawGame
 	.align	2
+	.global	initializeBackground
+	.syntax unified
+	.arm
+	.fpu softvfp
+	.type	initializeBackground, %function
+initializeBackground:
+	@ Function supports interworking.
+	@ args = 0, pretend = 0, frame = 0
+	@ frame_needed = 0, uses_anonymous_args = 0
+	mov	r2, #2048
+	mov	r3, #67108864
+	push	{r4, lr}
+	mov	r1, #256
+	strh	r2, [r3, #8]	@ movhi
+	ldr	r0, .L16
+	ldr	r3, .L16+4
+	mov	lr, pc
+	bx	r3
+	mov	r2, #832
+	mov	r1, #0
+	ldr	r0, .L16+8
+	ldr	r3, .L16+12
+	mov	lr, pc
+	bx	r3
+	mov	r2, #1024
+	mov	r1, #8
+	ldr	r0, .L16+16
+	ldr	r3, .L16+20
+	mov	lr, pc
+	bx	r3
+	pop	{r4, lr}
+	bx	lr
+.L17:
+	.align	2
+.L16:
+	.word	testmapPal
+	.word	copyToBGPaletteMem
+	.word	testmapTiles
+	.word	copyToCharBlock
+	.word	testmapMap
+	.word	copyToScreenBlock
+	.size	initializeBackground, .-initializeBackground
+	.align	2
 	.global	initializeGame
 	.syntax unified
 	.arm
@@ -85,14 +128,15 @@ initializeGame:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, lr}
-	ldr	r3, .L16
+	bl	initializeBackground
+	ldr	r3, .L20
 	mov	lr, pc
 	bx	r3
 	pop	{r4, lr}
 	bx	lr
-.L17:
+.L21:
 	.align	2
-.L16:
+.L20:
 	.word	initializeSonic
 	.size	initializeGame, .-initializeGame
 	.ident	"GCC: (devkitARM release 53) 9.1.0"

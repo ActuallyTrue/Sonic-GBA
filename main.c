@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "myLib.h"
+#include "sonic.h"
+#include "game.h"
 
 // Prototypes
 void initialize();

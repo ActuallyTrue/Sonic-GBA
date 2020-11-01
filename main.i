@@ -1334,6 +1334,41 @@ void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned 
 
 int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
 # 4 "main.c" 2
+# 1 "sonic.h" 1
+# 18 "sonic.h"
+typedef struct {
+    int worldRow;
+    int worldCol;
+    int rowVelocity;
+    int colVelocity;
+    int groundSpeed;
+    int slope;
+    int angle;
+    int width;
+    int height;
+    int aniCounter;
+    int aniState;
+    int prevAniState;
+    int curFrame;
+    int numFrames;
+    int hide;
+    int flip;
+    short grounded;
+} SONIC;
+
+extern SONIC player;
+void initializeSonic();
+void drawSonic();
+void updateSonic();
+void checkCollisionWithMap();
+# 5 "main.c" 2
+# 1 "game.h" 1
+void updateGame();
+void updatePlayer();
+void drawGame();
+void initializeGame();
+void initializeBackground();
+# 6 "main.c" 2
 
 
 void initialize();

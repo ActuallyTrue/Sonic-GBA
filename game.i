@@ -8,6 +8,7 @@ void updateGame();
 void updatePlayer();
 void drawGame();
 void initializeGame();
+void initializeBackground();
 # 3 "game.c" 2
 # 1 "myLib.h" 1
 
@@ -145,7 +146,22 @@ extern SONIC player;
 void initializeSonic();
 void drawSonic();
 void updateSonic();
+void checkCollisionWithMap();
 # 5 "game.c" 2
+# 1 "testmap.h" 1
+# 22 "testmap.h"
+extern const unsigned short testmapTiles[832];
+
+
+extern const unsigned short testmapMap[1024];
+
+
+extern const unsigned short testmapPal[256];
+# 6 "game.c" 2
+# 1 "testcollisionmap.h" 1
+# 20 "testcollisionmap.h"
+extern const unsigned short testcollisionmapBitmap[38400];
+# 7 "game.c" 2
 void updateGame() {
     updatePlayer();
 }
@@ -159,5 +175,13 @@ void drawGame() {
 }
 
 void initializeGame() {
+    initializeBackground();
     initializeSonic();
+}
+
+void initializeBackground() {
+    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (0 << 7) | (0 << 14) | ((8) << 8);
+    copyToBGPaletteMem(testmapPal, 512 >> 1);
+    copyToCharBlock(testmapTiles, 0, 1664 >> 1);
+    copyToScreenBlock(testmapMap, 8, 2048 >> 1);
 }

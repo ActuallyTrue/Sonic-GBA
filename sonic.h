@@ -39,3 +39,4 @@ extern SONIC player;
 void initializeSonic();
 void drawSonic();
 void updateSonic();
+void checkCollisionWithMap();
