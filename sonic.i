@@ -22,6 +22,7 @@ typedef struct {
     int hide;
     int flip;
     short grounded;
+    short spinDashing;
 } SONIC;
 
 extern SONIC player;
@@ -157,81 +158,96 @@ SONIC player;
 void initializeSonic() {
     copyToSpritePaletteMem(sonicSpritePal, 512 >> 1);
     copyToCharBlock(sonicSpriteTiles, 4, 32768 >> 1);
-    player.height = 32 << 6;
-    player.width = 32 << 6;
+    player.height = 32;
+    player.width = 32;
+    player.worldCol = ((208) << 6);
 }
 
 void updateSonic() {
 
-    short buttonPressed = 0;
+    short moveInput = 0;
     if((~((*(volatile unsigned short *)0x04000130)) & ((1<<5)))) {
         if (player.grounded) {
             if (player.colVelocity > 0) {
-            player.colVelocity -= (int)(0.5 * 64);
+            player.colVelocity -= 32;
             } else {
-                player.colVelocity -= (int)(0.046875 * 64);
+                player.colVelocity -= 3;
             }
         } else {
             if (player.colVelocity > 0) {
-            player.colVelocity -= (int)(0.09375 * 64);
+            player.colVelocity -= 6;
             } else {
-                player.colVelocity -= (int)(0.09375 * 64);
+                player.colVelocity -= 6;
             }
         }
 
         player.flip = 0;
-        buttonPressed = 1;
+        moveInput = 1;
     }
     if((~((*(volatile unsigned short *)0x04000130)) & ((1<<4)))) {
         if (player.grounded) {
             if (player.colVelocity < 0) {
-            player.colVelocity += (int)(0.5 * 64);
+            player.colVelocity += 32;
             } else {
-                player.colVelocity += (int)(0.046875 * 64);
+                player.colVelocity += 3;
             }
         } else {
             if (player.colVelocity < 0) {
-                player.colVelocity += (int)(0.09375 * 64);
+                player.colVelocity += 6;
             } else {
-                player.colVelocity += (int)(0.09375 * 64);
+                player.colVelocity += 6;
             }
         }
         player.flip = 1;
-        buttonPressed = 1;
+        moveInput = 1;
+    }
+    short downPressed = 0;
+    if ((~((*(volatile unsigned short *)0x04000130)) & ((1<<7)))) {
+        downPressed = 1;
     }
 
-    if (player.colVelocity > (int)(6 * 64)) {
-        player.colVelocity = (int)(6 * 64);
+    if (player.colVelocity > 384) {
+        player.colVelocity = 384;
     }
-    if (player.colVelocity < -(int)(6 * 64)) {
-        player.colVelocity = -(int)(6 * 64);
+    if (player.colVelocity < -384) {
+        player.colVelocity = -384;
     }
 
-    if (!buttonPressed) {
+    if (!moveInput) {
         if (player.colVelocity > 0) {
-            player.colVelocity -= (int)(0.046875 * 64);
+            player.colVelocity -= 3;
             if (player.colVelocity < 0) {
                 player.colVelocity = 0;
             }
         }
         if (player.colVelocity < 0) {
-            player.colVelocity += (int)(0.046875 * 64);
+            player.colVelocity += 3;
             if (player.colVelocity > 0) {
                 player.colVelocity = 0;
             }
         }
 
     }
-    if (((!(~(oldButtons) & ((1<<0)))) && (~(buttons) & ((1<<0)))) && player.grounded) {
+    if (((!(~(oldButtons) & ((1<<0)))) && (~(buttons) & ((1<<0)))) && player.grounded && !downPressed) {
         player.grounded = 0;
 
-        player.rowVelocity = player.rowVelocity - (int)(6.5 * 64);
+        player.rowVelocity = player.rowVelocity - 416;
+    } else if (((!(~(oldButtons) & ((1<<0)))) && (~(buttons) & ((1<<0)))) && player.grounded && downPressed) {
+        player.spinDashing = 1;
     }
 
-    if ((((~(oldButtons) & ((1<<0)))) && !(~(buttons) & ((1<<0))))) {
+    if ((((~(oldButtons) & ((1<<0)))) && !(~(buttons) & ((1<<0)))) && !player.grounded) {
         if (player.rowVelocity < -4 * 64) {
             player.rowVelocity = -4 * 64;
         }
+    }
+
+    if ((((~(oldButtons) & ((1<<7)))) && !(~(buttons) & ((1<<7)))) && player.spinDashing) {
+        player.colVelocity = player.flip ? 384 : -384;
+        player.spinDashing = 0;
+
+
+
     }
 
 
@@ -255,11 +271,11 @@ void updateSonic() {
         }
     }
 
-    if (player.worldRow + player.height > 160 * 64 && !player.grounded) {
-        player.worldRow = ((160 * 64) - player.rowVelocity) - (player.height - player.rowVelocity);
+    if (((player.worldRow) >> 6) + player.height > 160 && !player.grounded) {
+        player.worldRow = (((160) << 6) - player.rowVelocity) - (((player.height) << 6) - player.rowVelocity);
         player.grounded = 1;
     } else {
-        player.rowVelocity += (int)(0.21875 * 64);
+        player.rowVelocity += 14;
     }
 
     checkCollisionWithMap();
@@ -273,51 +289,67 @@ void updateSonic() {
 }
 
 void checkCollisionWithMap() {
+# 174 "sonic.c"
     if (player.colVelocity > 0) {
-        for (int i = player.worldCol / 64; i < (player.worldCol + player.colVelocity)/64; i++) {
-            if (testcollisionmapBitmap[((player.worldRow/64)*(240)+(i + (player.width / 64) - 1))] == 0x7FFF
-            && testcollisionmapBitmap[(((player.worldRow/64) + (player.height/64) - 1)*(240)+(i + (player.width / 64) - 1))] == 0x7FFF) {
+        for (int i = ((player.worldCol) >> 6); i < ((player.worldCol + player.colVelocity) >> 6); i++) {
+            if (testcollisionmapBitmap[((((player.worldRow) >> 6))*(240)+(i + player.width - 1))] == 0x7FFF
+            && testcollisionmapBitmap[((((player.worldRow) >> 6) + player.height - 1)*(240)+(i + player.width - 1))] == 0x7FFF) {
                 continue;
             } else {
-                player.colVelocity = ((i * 64) - player.worldCol);
+                player.colVelocity = (((i) << 6) - player.worldCol);
                 player.worldCol += player.colVelocity;
                 player.colVelocity = 0;
             }
         }
     }
     if (player.colVelocity < 0) {
-        for (int i = player.worldCol / 64; i > (player.worldCol + player.colVelocity)/64; i--) {
-            if (testcollisionmapBitmap[((player.worldRow/64)*(240)+(i))] == 0x7FFF
-            && testcollisionmapBitmap[(((player.worldRow/64) + (player.height/64) - 1)*(240)+(i))] == 0x7FFF) {
+        for (int i = ((player.worldCol) >> 6); i > ((player.worldCol + player.colVelocity) >> 6) && i > 0; i--) {
+            if (testcollisionmapBitmap[((((player.worldRow) >> 6))*(240)+(i))] == 0x7FFF
+            && testcollisionmapBitmap[((((player.worldRow) >> 6) + player.height - 1)*(240)+(i))] == 0x7FFF) {
                 continue;
             } else {
-                player.colVelocity = ((i * 64) - player.worldCol);
+                player.colVelocity = (((i) << 6) - player.worldCol);
+                player.worldCol += player.colVelocity;
+                player.colVelocity = 0;
             }
         }
     }
 
     if (player.rowVelocity > 0) {
-        for (int i = player.worldRow / 64; i < (player.worldRow + player.rowVelocity)/64; i++) {
-            if (testcollisionmapBitmap[((i + (player.height/64) - 1)*(240)+(player.worldCol/64))] == 0x7FFF
-            && testcollisionmapBitmap[((i + (player.height/64) - 1)*(240)+((player.worldCol/64) + (player.width / 64) - 1))] == 0x7FFF) {
+        for (int i = ((player.worldRow) >> 6); i < ((player.worldRow + player.rowVelocity) >> 6); i++) {
+            if (testcollisionmapBitmap[((i + player.height - 1)*(240)+(((player.worldCol) >> 6)))] == 0x7FFF
+            && testcollisionmapBitmap[((i + player.height - 1)*(240)+(((player.worldCol) >> 6) + player.width - 2))] == 0x7FFF) {
                 continue;
             } else {
-                player.rowVelocity = ((i * 64) - player.worldRow);
+                player.rowVelocity = (((i) << 6) - player.worldRow) - 64;
+                player.worldRow += player.rowVelocity;
+                player.rowVelocity = 0;
                 player.grounded = 1;
             }
         }
-    } else {
-        if (testcollisionmapBitmap[(((player.worldRow/64) + 1 + (player.height/64) - 1)*(240)+(player.worldCol/64))] != 0x7FFF
-            && testcollisionmapBitmap[(((player.worldRow/64) + 1 + (player.height/64) - 1)*(240)+((player.worldCol/64) + (player.width / 64) - 1))] != 0x7FFF) {
+    }
+
+    if (testcollisionmapBitmap[((((player.worldRow) >> 6) + 1 + player.height - 1)*(240)+(((player.worldCol) >> 6)))] == 0x7FFF
+            && testcollisionmapBitmap[((((player.worldRow) >> 6) + 1 + player.height - 1)*(240)+(((player.worldCol) >> 6) + player.width - 1))] == 0x7FFF) {
                 player.grounded = 0;
+    }
+
+    if (player.rowVelocity < 0) {
+        for (int i = ((player.worldRow) >> 6); i > ((player.worldRow + player.rowVelocity) >> 6); i--) {
+            if (testcollisionmapBitmap[((i)*(240)+(((player.worldCol) >> 6)))] == 0x7FFF
+            && testcollisionmapBitmap[((i)*(240)+(((player.worldCol) >> 6) + player.width - 2))] == 0x7FFF) {
+                continue;
+            } else {
+                player.rowVelocity = (((i) << 6) - player.worldRow);
+            }
         }
     }
-# 178 "sonic.c"
+
 }
 
 void drawSonic() {
-    shadowOAM[0].attr0 = (0xFF & (int)(player.worldRow/64)) | (0 << 14) | (0 << 13) | (0 << 8);
- shadowOAM[0].attr1 = (0x1FF & (int)(player.worldCol / 64)) | (2 << 14);
+    shadowOAM[0].attr0 = (0xFF & ((player.worldRow) >> 6)) | (0 << 14) | (0 << 13) | (0 << 8);
+ shadowOAM[0].attr1 = (0x1FF & ((player.worldCol) >> 6)) | (2 << 14);
 
     if (player.flip) {
         shadowOAM[0].attr1 |= (1 << 12);

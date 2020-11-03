@@ -287,4 +287,8 @@ void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned 
 // Miscellaneous Functions
 int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
 
+//for fixed point encoding
+#define SHIFTUP(num) ((num) << 6)
+#define SHIFTDOWN(num) ((num) >> 6)
+
 #endif

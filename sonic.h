@@ -2,17 +2,17 @@
 // << 6 means * 64, >> 6 means /64
 //current sonic is Tall x Large
 //Constants
-#define ACCELERATION (int)(0.046875 * 64)
-#define DECELERATION (int)(0.5 * 64)
-#define FRICTION (int)(0.046875 * 64)
-#define TOPSPEED (int)(6 * 64)
-#define SLOPEFACTOR (int)(0.125 * 64)
-#define SLOPEROLLUP (int)(0.078125 * 64)
-#define SLOPEROLLDOWN (int)(0.3125 * 64)
-#define FALL (int)(2.5 * 64) //tolerance ground speed for sticking to walls and ceilings
-#define AIRACCELERATION (int)(0.09375 * 64) //air acceleration (2x acc)
-#define JUMPFORCE (int)(6.5 * 64)
-#define GRAVITY (int)(0.21875 * 64)
+#define ACCELERATION 3
+#define DECELERATION 32
+#define FRICTION 3
+#define TOPSPEED 384
+#define SLOPEFACTOR 8
+#define SLOPEROLLUP 5
+#define SLOPEROLLDOWN 20
+#define FALL 160 //tolerance ground speed for sticking to walls and ceilings
+#define AIRACCELERATION 6 //air acceleration (2x acc)
+#define JUMPFORCE 416
+#define GRAVITY 14
 
 //Jumping Constants
 typedef struct {
@@ -33,6 +33,7 @@ typedef struct {
     int hide;
     int flip;
     short grounded;
+    short spinDashing;
 } SONIC;
 
 extern SONIC player;

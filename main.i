@@ -1354,6 +1354,7 @@ typedef struct {
     int hide;
     int flip;
     short grounded;
+    short spinDashing;
 } SONIC;
 
 extern SONIC player;
