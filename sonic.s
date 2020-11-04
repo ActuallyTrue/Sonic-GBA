@@ -29,25 +29,27 @@ initializeSonic:
 	bx	r3
 	mov	r2, #16384
 	mov	r1, #4
-	ldr	r3, .L4+8
-	ldr	r0, .L4+12
+	ldr	r0, .L4+8
+	ldr	r3, .L4+12
 	mov	lr, pc
 	bx	r3
 	mov	r2, #32
-	mov	r1, #13312
+	mov	r0, #13312
+	mov	r1, #0
 	ldr	r3, .L4+16
 	pop	{r4, lr}
 	str	r2, [r3, #32]
 	str	r2, [r3, #28]
-	str	r1, [r3, #4]
+	str	r0, [r3, #4]
+	str	r1, [r3]
 	bx	lr
 .L5:
 	.align	2
 .L4:
 	.word	sonicSpritePal
 	.word	copyToSpritePaletteMem
-	.word	copyToCharBlock
 	.word	sonicSpriteTiles
+	.word	copyToCharBlock
 	.word	player
 	.size	initializeSonic, .-initializeSonic
 	.align	2
@@ -325,118 +327,102 @@ updateSonic:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	ldr	r3, .L120
-	ldrh	r3, [r3, #48]
+	ldr	r2, .L154
+	ldrh	r3, [r2, #48]
 	push	{r4, lr}
-	ldr	r4, .L120+4
+	ldr	r4, .L154+4
 	tst	r3, #32
-	movne	r0, #0
+	ldrsh	r1, [r4, #66]
 	ldr	r3, [r4, #12]
 	bne	.L58
-	ldrsh	r2, [r4, #64]
-	cmp	r2, #0
-	subeq	r3, r3, #6
-	streq	r3, [r4, #12]
-	bne	.L115
-.L61:
-	mov	r2, #0
-	mov	r0, #1
-	str	r2, [r4, #60]
-.L58:
-	ldr	r2, .L120
-	ldrh	r1, [r2, #48]
-	tst	r1, #16
-	bne	.L62
-	ldrsh	r1, [r4, #64]
 	cmp	r1, #0
-	bne	.L116
-	add	r3, r3, #6
-	str	r3, [r4, #12]
-.L66:
-	mov	r1, #1
-	ldr	r2, .L120
+	beq	.L148
+	ldrh	r1, [r2, #48]
+.L146:
 	cmp	r3, #384
-	ldrh	r2, [r2, #48]
-	str	r1, [r4, #60]
-	ble	.L65
-	mov	r3, #384
+	ldrh	r0, [r2, #48]
+	bgt	.L100
+	cmn	r3, #384
+	mvnlt	r3, #380
+	bge	.L149
+.L141:
 	str	r3, [r4, #12]
-.L92:
-	ldr	r3, .L120+8
-	ldr	r1, .L120+12
+.L99:
+	ldr	r3, .L154+8
+	ldr	r2, .L154+12
 	ldrh	r3, [r3]
-	ldrh	r1, [r1]
+	ldrh	ip, [r2]
 	tst	r3, #1
-	and	r0, r1, #1
-	beq	.L75
-	cmp	r0, #0
-	bne	.L76
-	ldrsh	ip, [r4, #64]
-	subs	ip, ip, #0
-	movne	ip, #1
-	ands	r2, r2, #128
-	movne	lr, ip
+	and	r2, ip, #1
+	beq	.L82
+	cmp	r2, #0
+	bne	.L83
+	ldrsh	r1, [r4, #64]
+	subs	r1, r1, #0
+	movne	r1, #1
+	ands	r0, r0, #128
+	movne	lr, r1
 	moveq	lr, #0
 	cmp	lr, #0
-	bne	.L117
-	cmp	r2, #0
-	movne	ip, #0
-	cmp	ip, #0
-	bne	.L118
-.L76:
+	bne	.L150
+	cmp	r0, #0
+	movne	r1, #0
+	cmp	r1, #0
+	bne	.L151
+.L83:
 	ands	r3, r3, #128
-	bne	.L78
-	tst	r1, #128
-	beq	.L78
+	bne	.L85
+	tst	ip, #128
+	beq	.L85
 	ldrsh	r2, [r4, #66]
 	cmp	r2, #0
-	bne	.L119
-.L78:
+	bne	.L152
+.L85:
 	ldr	r3, [r4, #4]
 	cmp	r3, #0
-	bge	.L80
+	bge	.L87
 	mov	r2, #0
 	ldr	r3, [r4, #12]
 	cmp	r3, r2
 	movne	r3, r2
 	str	r2, [r4, #4]
 	strne	r2, [r4, #12]
-.L80:
+.L87:
 	ldr	r2, [r4, #28]
 	add	r3, r2, r3
 	cmp	r3, #15360
-	ble	.L82
+	ble	.L89
 	ldr	r3, [r4, #12]
 	cmp	r3, #0
 	movne	r3, #0
 	rsb	r2, r2, #15360
 	str	r2, [r4, #4]
 	strne	r3, [r4, #12]
-.L82:
+.L89:
 	ldr	r3, [r4]
 	cmp	r3, #0
 	asrge	r3, r3, #6
-	bge	.L85
+	bge	.L92
 	mov	r2, #0
 	ldr	r3, [r4, #8]
 	cmp	r3, r2
 	movne	r3, r2
 	str	r2, [r4]
 	strne	r2, [r4, #8]
-.L85:
+.L92:
 	ldr	r2, [r4, #32]
-	add	r3, r2, r3
+	add	r3, r3, r2
 	cmp	r3, #160
-	ble	.L86
+	ble	.L93
 	ldrsh	r3, [r4, #64]
 	cmp	r3, #0
-	bne	.L86
+	bne	.L93
 	mov	r3, #1
 	lsl	r2, r2, #6
 	rsb	r2, r2, #10240
 	str	r2, [r4]
 	strh	r3, [r4, #64]	@ movhi
-.L87:
+.L94:
 	bl	checkCollisionWithMap
 	ldrsh	r3, [r4, #64]
 	cmp	r3, #0
@@ -453,99 +439,135 @@ updateSonic:
 	str	r3, [r4]
 	pop	{r4, lr}
 	bx	lr
-.L116:
+.L148:
+	ldrsh	r0, [r4, #64]
+	cmp	r0, #0
+	beq	.L60
+	cmp	r3, #0
+	ldrh	r0, [r2, #48]
+	ble	.L61
+	sub	r3, r3, #32
+	tst	r0, #16
+	str	r3, [r4, #12]
+	str	r1, [r4, #60]
+	bne	.L153
+.L62:
 	cmp	r3, #0
 	addge	r3, r3, #3
 	strge	r3, [r4, #12]
-	bge	.L66
-	mov	r1, #1
+	bge	.L74
+.L64:
+	mov	r2, #1
+	ldr	r1, .L154
 	add	r3, r3, #32
-	ldrh	r2, [r2, #48]
+	ldrh	r0, [r1, #48]
 	str	r3, [r4, #12]
-	str	r1, [r4, #60]
-.L65:
+	str	r2, [r4, #60]
+.L104:
 	cmn	r3, #384
-	ldrlt	r3, .L120+16
+	ldrlt	r3, .L154+16
 	strlt	r3, [r4, #12]
-	b	.L92
-.L115:
-	cmp	r3, #0
-	subgt	r3, r3, #32
-	suble	r3, r3, #3
-	str	r3, [r4, #12]
-	b	.L61
-.L86:
+	b	.L99
+.L93:
 	ldr	r3, [r4, #8]
 	add	r3, r3, #14
 	str	r3, [r4, #8]
-	b	.L87
-.L62:
-	cmp	r3, #384
-	ldrh	r2, [r2, #48]
-	ble	.L68
-	mov	r3, #384
-	cmp	r0, #0
-	str	r3, [r4, #12]
-	bne	.L92
-.L93:
-	subs	r3, r3, #3
-	movmi	r3, #0
-.L114:
-	str	r3, [r4, #12]
-	b	.L92
-.L75:
-	cmp	r0, #0
-	beq	.L76
+	b	.L94
+.L58:
+	ldrh	r0, [r2, #48]
+	and	r0, r0, #16
+	orrs	r1, r1, r0
+	bne	.L146
 	ldrsh	r2, [r4, #64]
 	cmp	r2, #0
-	bne	.L76
+	bne	.L62
+.L66:
+	add	r3, r3, #6
+	str	r3, [r4, #12]
+.L74:
+	mov	r2, #1
+	ldr	r1, .L154
+	cmp	r3, #384
+	ldrh	r0, [r1, #48]
+	str	r2, [r4, #60]
+	ble	.L104
+.L75:
+	mov	r3, #384
+	str	r3, [r4, #12]
+	b	.L99
+.L82:
+	cmp	r2, #0
+	beq	.L83
+	ldrsh	r2, [r4, #64]
+	cmp	r2, #0
+	bne	.L83
 	ldr	r2, [r4, #8]
 	cmn	r2, #256
 	mvnlt	r2, #255
 	strlt	r2, [r4, #8]
-	b	.L76
-.L68:
-	cmn	r3, #384
-	bge	.L70
-	ldr	r3, .L120+16
-	cmp	r0, #0
+	b	.L83
+.L100:
+	mov	r3, #384
 	str	r3, [r4, #12]
-	mvneq	r3, #380
-	beq	.L114
-	b	.L92
-.L119:
+	ldr	r3, [r4, #12]
+.L102:
+	subs	r3, r3, #3
+	movmi	r3, #0
+	b	.L141
+.L152:
 	ldr	r1, [r4, #60]
 	cmp	r1, #0
-	ldr	r2, .L120+16
+	ldr	r2, .L154+16
 	movne	r2, #384
 	strh	r3, [r4, #66]	@ movhi
 	str	r2, [r4, #12]
-	b	.L78
-.L117:
-	ldr	r2, [r4, #8]
-	sub	r2, r2, #416
-	strh	r0, [r4, #64]	@ movhi
-	str	r2, [r4, #8]
-	b	.L76
-.L118:
+	b	.L85
+.L60:
+	ldrh	r1, [r2, #48]
+	sub	r3, r3, #6
+	tst	r1, #16
+	str	r3, [r4, #12]
+	str	r0, [r4, #60]
+	beq	.L66
+	cmp	r3, #384
+	ldrh	r0, [r2, #48]
+	ble	.L104
+	b	.L75
+.L150:
+	ldr	r1, [r4, #8]
+	sub	r1, r1, #416
+	strh	r2, [r4, #64]	@ movhi
+	str	r1, [r4, #8]
+	b	.L83
+.L151:
 	mov	r2, #1
 	strh	r2, [r4, #66]	@ movhi
-	b	.L76
-.L70:
-	cmp	r0, #0
-	bne	.L92
+	b	.L83
+.L61:
+	sub	r3, r3, #3
+	tst	r0, #16
+	str	r3, [r4, #12]
+	str	r1, [r4, #60]
+	beq	.L64
+	ldrh	r0, [r2, #48]
+	b	.L104
+.L153:
+	cmp	r3, #384
+	ldrh	r0, [r2, #48]
+	bgt	.L75
+	b	.L99
+.L149:
 	ldr	r3, [r4, #12]
 	cmp	r3, #0
-	bgt	.L93
-	beq	.L92
+	bgt	.L102
+	beq	.L99
 	add	r3, r3, #3
 	cmp	r3, #0
-	strgt	r0, [r4, #12]
-	bgt	.L92
-	b	.L114
-.L121:
+	movgt	r3, #0
+	b	.L141
+.L155:
 	.align	2
-.L120:
+.L154:
 	.word	67109120
 	.word	player
 	.word	oldButtons
@@ -562,12 +584,12 @@ drawSonic:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	ldr	r2, .L128
+	ldr	r2, .L162
 	str	lr, [sp, #-4]!
-	ldr	r3, .L128+4
+	ldr	r3, .L162+4
 	ldm	r2, {r1, lr}
 	ldr	ip, [r2, #60]
-	ldr	r0, .L128+8
+	ldr	r0, .L162+8
 	and	r3, r3, lr, asr #6
 	orr	r3, r3, #32768
 	cmp	ip, #0
@@ -584,9 +606,9 @@ drawSonic:
 	strh	r3, [r0, #4]	@ movhi
 	ldr	lr, [sp], #4
 	bx	lr
-.L129:
+.L163:
 	.align	2
-.L128:
+.L162:
 	.word	player
 	.word	511
 	.word	shadowOAM

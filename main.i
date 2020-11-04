@@ -1370,6 +1370,56 @@ void drawGame();
 void initializeGame();
 void initializeBackground();
 # 6 "main.c" 2
+# 1 "titleScreen.h" 1
+# 22 "titleScreen.h"
+extern const unsigned short titleScreenTiles[14272];
+
+
+extern const unsigned short titleScreenMap[1024];
+
+
+extern const unsigned short titleScreenPal[256];
+# 7 "main.c" 2
+# 1 "instructionScreen.h" 1
+# 22 "instructionScreen.h"
+extern const unsigned short instructionScreenTiles[12320];
+
+
+extern const unsigned short instructionScreenMap[1024];
+
+
+extern const unsigned short instructionScreenPal[256];
+# 8 "main.c" 2
+# 1 "winScreen.h" 1
+# 22 "winScreen.h"
+extern const unsigned short winScreenTiles[14624];
+
+
+extern const unsigned short winScreenMap[1024];
+
+
+extern const unsigned short winScreenPal[256];
+# 9 "main.c" 2
+# 1 "loseScreen.h" 1
+# 22 "loseScreen.h"
+extern const unsigned short loseScreenTiles[5216];
+
+
+extern const unsigned short loseScreenMap[1024];
+
+
+extern const unsigned short loseScreenPal[256];
+# 10 "main.c" 2
+# 1 "pauseScreen.h" 1
+# 22 "pauseScreen.h"
+extern const unsigned short pauseScreenTiles[6464];
+
+
+extern const unsigned short pauseScreenMap[1024];
+
+
+extern const unsigned short pauseScreenPal[256];
+# 11 "main.c" 2
 
 
 void initialize();
@@ -1377,6 +1427,8 @@ void initialize();
 
 void goToStart();
 void start();
+void goToInstructions();
+void instructions();
 void goToGame();
 void game();
 void goToPause();
@@ -1390,6 +1442,7 @@ void lose();
 enum
 {
     START,
+    INSTRUCTIONS,
     GAME,
     PAUSE,
     WIN,
@@ -1419,6 +1472,9 @@ int main()
         {
         case START:
             start();
+            break;
+        case INSTRUCTIONS:
+            instructions();
             break;
         case GAME:
             game();
@@ -1452,7 +1508,10 @@ void initialize()
 
 void goToStart() {
 
-    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (0 << 7) | (0 << 14) | ((24) << 8);
+    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (1 << 7) | (0 << 14) | ((24) << 8);
+    copyToBGPaletteMem(titleScreenPal, 512 >> 1);
+    copyToCharBlock(titleScreenTiles, 0, 28544 >> 1);
+    copyToScreenBlock(titleScreenMap, 24, 2048 >> 1);
     hideSprites();
     copyShadowOAM();
     state = START;
@@ -1461,6 +1520,20 @@ void goToStart() {
 
 void start() {
     if (((!(~(oldButtons) & ((1<<3)))) && (~(buttons) & ((1<<3))))) {
+        goToInstructions();
+    }
+}
+
+void goToInstructions() {
+    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (1 << 7) | (0 << 14) | ((24) << 8);
+    copyToBGPaletteMem(instructionScreenPal, 512 >> 1);
+    copyToCharBlock(instructionScreenTiles, 0, 24640 >> 1);
+    copyToScreenBlock(instructionScreenMap, 24, 2048 >> 1);
+    state = INSTRUCTIONS;
+}
+
+void instructions() {
+    if (((!(~(oldButtons) & ((1<<3)))) && (~(buttons) & ((1<<3))))) {
         initializeGame();
         goToGame();
     }
@@ -1468,6 +1541,7 @@ void start() {
 
 
 void goToGame() {
+    initializeBackground();
     state = GAME;
 }
 
@@ -1477,8 +1551,13 @@ void game() {
     drawGame();
     waitForVBlank();
     copyShadowOAM();
-
-
+    if (((!(~(oldButtons) & ((1<<3)))) && (~(buttons) & ((1<<3))))) {
+         goToPause();
+    } else if (((!(~(oldButtons) & ((1<<8)))) && (~(buttons) & ((1<<8))))) {
+        goToWin();
+    } else if (((!(~(oldButtons) & ((1<<9)))) && (~(buttons) & ((1<<9))))) {
+        goToLose();
+    }
 
 
 
@@ -1489,7 +1568,10 @@ void game() {
 
 void goToPause() {
 
-    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (0 << 7) | (0 << 14) | ((24) << 8);
+    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (1 << 7) | (0 << 14) | ((24) << 8);
+    copyToBGPaletteMem(pauseScreenPal, 512 >> 1);
+    copyToCharBlock(pauseScreenTiles, 0, 12928 >> 1);
+    copyToScreenBlock(pauseScreenMap, 24, 2048 >> 1);
     hideSprites();
     copyShadowOAM();
     state = PAUSE;
@@ -1507,7 +1589,10 @@ void pause() {
 
 void goToWin() {
 
-    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (0 << 7) | (0 << 14) | ((24) << 8);
+    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (1 << 7) | (0 << 14) | ((24) << 8);
+    copyToBGPaletteMem(winScreenPal, 512 >> 1);
+    copyToCharBlock(winScreenTiles, 0, 29248 >> 1);
+    copyToScreenBlock(winScreenMap, 24, 2048 >> 1);
     hideSprites();
     copyShadowOAM();
     state = WIN;
@@ -1524,7 +1609,10 @@ void win() {
 
 void goToLose() {
 
-    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (0 << 7) | (0 << 14) | ((24) << 8);
+    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (1 << 7) | (0 << 14) | ((24) << 8);
+    copyToBGPaletteMem(loseScreenPal, 512 >> 1);
+    copyToCharBlock(loseScreenTiles, 0, 10432 >> 1);
+    copyToScreenBlock(loseScreenMap, 24, 2048 >> 1);
     hideSprites();
     copyShadowOAM();
     state = LOSE;

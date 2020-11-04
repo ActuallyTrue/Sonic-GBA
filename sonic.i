@@ -161,12 +161,13 @@ void initializeSonic() {
     player.height = 32;
     player.width = 32;
     player.worldCol = ((208) << 6);
+    player.worldRow = 0;
 }
 
 void updateSonic() {
 
     short moveInput = 0;
-    if((~((*(volatile unsigned short *)0x04000130)) & ((1<<5)))) {
+    if((~((*(volatile unsigned short *)0x04000130)) & ((1<<5))) && !player.spinDashing) {
         if (player.grounded) {
             if (player.colVelocity > 0) {
             player.colVelocity -= 32;
@@ -184,7 +185,7 @@ void updateSonic() {
         player.flip = 0;
         moveInput = 1;
     }
-    if((~((*(volatile unsigned short *)0x04000130)) & ((1<<4)))) {
+    if((~((*(volatile unsigned short *)0x04000130)) & ((1<<4))) && !player.spinDashing) {
         if (player.grounded) {
             if (player.colVelocity < 0) {
             player.colVelocity += 32;
@@ -289,7 +290,7 @@ void updateSonic() {
 }
 
 void checkCollisionWithMap() {
-# 174 "sonic.c"
+# 175 "sonic.c"
     if (player.colVelocity > 0) {
         for (int i = ((player.worldCol) >> 6); i < ((player.worldCol + player.colVelocity) >> 6); i++) {
             if (testcollisionmapBitmap[((((player.worldRow) >> 6))*(240)+(i + player.width - 1))] == 0x7FFF

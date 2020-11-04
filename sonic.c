@@ -11,12 +11,13 @@ void initializeSonic() {
     player.height = 32;
     player.width = 32;
     player.worldCol = SHIFTUP(208);
+    player.worldRow = 0;
 }
 
 void updateSonic() {
     // Control movement
     short moveInput = false;
-    if(BUTTON_HELD(BUTTON_LEFT)) {
+    if(BUTTON_HELD(BUTTON_LEFT) && !player.spinDashing) {
         if (player.grounded) {
             if (player.colVelocity > 0) {
             player.colVelocity -= DECELERATION;
@@ -34,7 +35,7 @@ void updateSonic() {
         player.flip = false;
         moveInput = true;
     }
-    if(BUTTON_HELD(BUTTON_RIGHT)) {
+    if(BUTTON_HELD(BUTTON_RIGHT) && !player.spinDashing) {
         if (player.grounded) {
             if (player.colVelocity < 0) {
             player.colVelocity += DECELERATION;
