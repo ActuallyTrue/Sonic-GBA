@@ -10,9 +10,12 @@
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
-# 64 "myLib.h"
+# 56 "myLib.h"
+extern int hOff;
+extern int vOff;
+# 67 "myLib.h"
 extern volatile unsigned short *videoBuffer;
-# 101 "myLib.h"
+# 104 "myLib.h"
 typedef struct
 {
     u16 tileimg[8192];
@@ -62,7 +65,7 @@ typedef struct
 
 
 extern OBJ_ATTR shadowOAM[];
-# 180 "myLib.h"
+# 183 "myLib.h"
 void hideSprites();
 void copyToSpritePaletteMem(const u16* paletteToCopy, int paletteLength);
 void copyShadowOAM();
@@ -92,10 +95,10 @@ typedef struct
     int hide;
     int flip;
 } ANISPRITE;
-# 228 "myLib.h"
+# 231 "myLib.h"
 extern unsigned short oldButtons;
 extern unsigned short buttons;
-# 243 "myLib.h"
+# 246 "myLib.h"
 typedef volatile struct {
     volatile const void *src;
     volatile void *dst;
@@ -104,7 +107,7 @@ typedef volatile struct {
 
 
 extern DMA *dma;
-# 283 "myLib.h"
+# 286 "myLib.h"
 void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned int cnt);
 
 
@@ -115,6 +118,8 @@ int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, i
 
 volatile unsigned short *videoBuffer = (unsigned short *)0x6000000;
 OBJ_ATTR shadowOAM[128];
+int hOff;
+int vOff;
 
 
 DMA *dma = (DMA *)0x40000B0;

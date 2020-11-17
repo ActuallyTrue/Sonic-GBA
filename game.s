@@ -84,25 +84,29 @@ initializeBackground:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	mov	r2, #2048
-	mov	r3, #67108864
+	mov	r2, #67108864
+	ldr	r3, .L16
+	ldr	r3, [r3]
+	lsl	r3, r3, #24
 	push	{r4, lr}
+	orr	r3, r3, #1073741824
+	lsr	r3, r3, #16
+	strh	r3, [r2, #8]	@ movhi
 	mov	r1, #256
-	strh	r2, [r3, #8]	@ movhi
-	ldr	r0, .L16
-	ldr	r3, .L16+4
+	ldr	r0, .L16+4
+	ldr	r3, .L16+8
 	mov	lr, pc
 	bx	r3
-	mov	r2, #832
 	mov	r1, #0
-	ldr	r0, .L16+8
-	ldr	r3, .L16+12
-	mov	lr, pc
-	bx	r3
-	mov	r2, #1024
-	mov	r1, #8
+	ldr	r2, .L16+12
 	ldr	r0, .L16+16
 	ldr	r3, .L16+20
+	mov	lr, pc
+	bx	r3
+	mov	r2, #11264
+	mov	r1, #10
+	ldr	r0, .L16+24
+	ldr	r3, .L16+28
 	mov	lr, pc
 	bx	r3
 	pop	{r4, lr}
@@ -110,11 +114,13 @@ initializeBackground:
 .L17:
 	.align	2
 .L16:
-	.word	testmapPal
+	.word	.LANCHOR0
+	.word	Level1Pal
 	.word	copyToBGPaletteMem
-	.word	testmapTiles
+	.word	8560
+	.word	Level1Tiles
 	.word	copyToCharBlock
-	.word	testmapMap
+	.word	Level1Map
 	.word	copyToScreenBlock
 	.size	initializeBackground, .-initializeBackground
 	.align	2
@@ -127,9 +133,14 @@ initializeGame:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
+	mov	r3, #0
 	push	{r4, lr}
+	ldr	r1, .L20
+	ldr	r2, .L20+4
+	str	r3, [r1]
+	str	r3, [r2]
 	bl	initializeBackground
-	ldr	r3, .L20
+	ldr	r3, .L20+8
 	mov	lr, pc
 	bx	r3
 	pop	{r4, lr}
@@ -137,6 +148,25 @@ initializeGame:
 .L21:
 	.align	2
 .L20:
+	.word	hOff
+	.word	vOff
 	.word	initializeSonic
 	.size	initializeGame, .-initializeGame
+	.comm	shouldLose,2,2
+	.comm	shouldWin,2,2
+	.global	currentTileMapDivision
+	.global	currentScreenBlock
+	.data
+	.align	2
+	.set	.LANCHOR0,. + 0
+	.type	currentScreenBlock, %object
+	.size	currentScreenBlock, 4
+currentScreenBlock:
+	.word	10
+	.bss
+	.align	2
+	.type	currentTileMapDivision, %object
+	.size	currentTileMapDivision, 4
+currentTileMapDivision:
+	.space	4
 	.ident	"GCC: (devkitARM release 53) 9.1.0"

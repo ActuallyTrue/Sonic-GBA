@@ -1178,6 +1178,8 @@ collision:
 	bx	lr
 	.size	collision, .-collision
 	.global	dma
+	.comm	vOff,4,4
+	.comm	hOff,4,4
 	.comm	shadowOAM,1024,4
 	.global	videoBuffer
 	.data

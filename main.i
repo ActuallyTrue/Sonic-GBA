@@ -1232,9 +1232,12 @@ _putchar_unlocked(int _c)
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
-# 64 "myLib.h"
+# 56 "myLib.h"
+extern int hOff;
+extern int vOff;
+# 67 "myLib.h"
 extern volatile unsigned short *videoBuffer;
-# 101 "myLib.h"
+# 104 "myLib.h"
 typedef struct
 {
     u16 tileimg[8192];
@@ -1284,7 +1287,7 @@ typedef struct
 
 
 extern OBJ_ATTR shadowOAM[];
-# 180 "myLib.h"
+# 183 "myLib.h"
 void hideSprites();
 void copyToSpritePaletteMem(const u16* paletteToCopy, int paletteLength);
 void copyShadowOAM();
@@ -1314,10 +1317,10 @@ typedef struct
     int hide;
     int flip;
 } ANISPRITE;
-# 228 "myLib.h"
+# 231 "myLib.h"
 extern unsigned short oldButtons;
 extern unsigned short buttons;
-# 243 "myLib.h"
+# 246 "myLib.h"
 typedef volatile struct {
     volatile const void *src;
     volatile void *dst;
@@ -1326,7 +1329,7 @@ typedef volatile struct {
 
 
 extern DMA *dma;
-# 283 "myLib.h"
+# 286 "myLib.h"
 void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned int cnt);
 
 
@@ -1334,8 +1337,8 @@ void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned 
 
 int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
 # 4 "main.c" 2
-# 1 "sonic.h" 1
-# 18 "sonic.h"
+# 1 "mario.h" 1
+# 17 "mario.h"
 typedef struct {
     int worldRow;
     int worldCol;
@@ -1354,7 +1357,9 @@ typedef struct {
     int hide;
     int flip;
     short grounded;
-    short spinDashing;
+    short running;
+    int hOff;
+    int vOff;
 } SONIC;
 
 extern SONIC player;
@@ -1362,6 +1367,7 @@ void initializeSonic();
 void drawSonic();
 void updateSonic();
 void checkCollisionWithMap();
+void adjustScreenOffset();
 # 5 "main.c" 2
 # 1 "game.h" 1
 void updateGame();
@@ -1369,6 +1375,10 @@ void updatePlayer();
 void drawGame();
 void initializeGame();
 void initializeBackground();
+extern int currentScreenBlock;
+extern int currentTileMapDivision;
+extern short shouldWin;
+extern short shouldLose;
 # 6 "main.c" 2
 # 1 "titleScreen.h" 1
 # 22 "titleScreen.h"
@@ -1420,6 +1430,16 @@ extern const unsigned short pauseScreenMap[1024];
 
 extern const unsigned short pauseScreenPal[256];
 # 11 "main.c" 2
+# 1 "Level1.h" 1
+# 22 "Level1.h"
+extern const unsigned short Level1Tiles[8560];
+
+
+extern const unsigned short Level1Map[11264];
+
+
+extern const unsigned short Level1Pal[256];
+# 12 "main.c" 2
 
 
 void initialize();
@@ -1507,6 +1527,8 @@ void initialize()
 
 
 void goToStart() {
+    (*(volatile unsigned short *)0x04000010) = 0;
+    (*(volatile unsigned short *)0x04000012) = 0;
 
     (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (1 << 7) | (0 << 14) | ((24) << 8);
     copyToBGPaletteMem(titleScreenPal, 512 >> 1);
@@ -1525,6 +1547,8 @@ void start() {
 }
 
 void goToInstructions() {
+    (*(volatile unsigned short *)0x04000010) = 0;
+    (*(volatile unsigned short *)0x04000012) = 0;
     (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (1 << 7) | (0 << 14) | ((24) << 8);
     copyToBGPaletteMem(instructionScreenPal, 512 >> 1);
     copyToCharBlock(instructionScreenTiles, 0, 24640 >> 1);
@@ -1551,6 +1575,29 @@ void game() {
     drawGame();
     waitForVBlank();
     copyShadowOAM();
+    if (currentScreenBlock == 10 && hOff < 0) {
+        hOff = 0;
+    }
+
+    if (currentScreenBlock == 19 && hOff >= 512 - 240 - 20) {
+        hOff = 512 - 240 - 20;
+    } else {
+        if (hOff >= 256 && currentScreenBlock < 19) {
+            currentScreenBlock++;
+            hOff -= 256;
+            (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (0 << 7) | (1 << 14) | ((currentScreenBlock) << 8);
+        }
+        if (hOff < 0 && currentScreenBlock > 10) {
+            currentScreenBlock--;
+            hOff += 256;
+            (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (0 << 7) | (1 << 14) | ((currentScreenBlock) << 8);
+        }
+    }
+
+
+
+    (*(volatile unsigned short *)0x04000010) = hOff;
+    (*(volatile unsigned short *)0x04000012) = vOff;
     if (((!(~(oldButtons) & ((1<<3)))) && (~(buttons) & ((1<<3))))) {
          goToPause();
     } else if (((!(~(oldButtons) & ((1<<8)))) && (~(buttons) & ((1<<8))))) {
@@ -1558,15 +1605,17 @@ void game() {
     } else if (((!(~(oldButtons) & ((1<<9)))) && (~(buttons) & ((1<<9))))) {
         goToLose();
     }
-
-
-
-
-
+    if (shouldWin) {
+        goToWin();
+    } else if (shouldLose) {
+        goToLose();
+    }
 }
 
 
 void goToPause() {
+    (*(volatile unsigned short *)0x04000010) = 0;
+    (*(volatile unsigned short *)0x04000012) = 0;
 
     (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (1 << 7) | (0 << 14) | ((24) << 8);
     copyToBGPaletteMem(pauseScreenPal, 512 >> 1);
@@ -1588,6 +1637,8 @@ void pause() {
 
 
 void goToWin() {
+    (*(volatile unsigned short *)0x04000010) = 0;
+    (*(volatile unsigned short *)0x04000012) = 0;
 
     (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (1 << 7) | (0 << 14) | ((24) << 8);
     copyToBGPaletteMem(winScreenPal, 512 >> 1);
@@ -1608,6 +1659,8 @@ void win() {
 
 
 void goToLose() {
+    (*(volatile unsigned short *)0x04000010) = 0;
+    (*(volatile unsigned short *)0x04000012) = 0;
 
     (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (1 << 7) | (0 << 14) | ((24) << 8);
     copyToBGPaletteMem(loseScreenPal, 512 >> 1);

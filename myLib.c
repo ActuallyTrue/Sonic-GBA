@@ -2,6 +2,8 @@
 
 volatile unsigned short *videoBuffer = (unsigned short *)0x6000000;
 OBJ_ATTR shadowOAM[128];
+int hOff;
+int vOff;
 
 // The start of DMA registers
 DMA *dma = (DMA *)0x40000B0;

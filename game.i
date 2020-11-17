@@ -9,6 +9,10 @@ void updatePlayer();
 void drawGame();
 void initializeGame();
 void initializeBackground();
+extern int currentScreenBlock;
+extern int currentTileMapDivision;
+extern short shouldWin;
+extern short shouldLose;
 # 3 "game.c" 2
 # 1 "myLib.h" 1
 
@@ -18,9 +22,12 @@ void initializeBackground();
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
-# 64 "myLib.h"
+# 56 "myLib.h"
+extern int hOff;
+extern int vOff;
+# 67 "myLib.h"
 extern volatile unsigned short *videoBuffer;
-# 101 "myLib.h"
+# 104 "myLib.h"
 typedef struct
 {
     u16 tileimg[8192];
@@ -70,7 +77,7 @@ typedef struct
 
 
 extern OBJ_ATTR shadowOAM[];
-# 180 "myLib.h"
+# 183 "myLib.h"
 void hideSprites();
 void copyToSpritePaletteMem(const u16* paletteToCopy, int paletteLength);
 void copyShadowOAM();
@@ -100,10 +107,10 @@ typedef struct
     int hide;
     int flip;
 } ANISPRITE;
-# 228 "myLib.h"
+# 231 "myLib.h"
 extern unsigned short oldButtons;
 extern unsigned short buttons;
-# 243 "myLib.h"
+# 246 "myLib.h"
 typedef volatile struct {
     volatile const void *src;
     volatile void *dst;
@@ -112,7 +119,7 @@ typedef volatile struct {
 
 
 extern DMA *dma;
-# 283 "myLib.h"
+# 286 "myLib.h"
 void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned int cnt);
 
 
@@ -120,8 +127,8 @@ void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned 
 
 int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
 # 4 "game.c" 2
-# 1 "sonic.h" 1
-# 18 "sonic.h"
+# 1 "mario.h" 1
+# 17 "mario.h"
 typedef struct {
     int worldRow;
     int worldCol;
@@ -140,7 +147,9 @@ typedef struct {
     int hide;
     int flip;
     short grounded;
-    short spinDashing;
+    short running;
+    int hOff;
+    int vOff;
 } SONIC;
 
 extern SONIC player;
@@ -148,27 +157,35 @@ void initializeSonic();
 void drawSonic();
 void updateSonic();
 void checkCollisionWithMap();
+void adjustScreenOffset();
 # 5 "game.c" 2
-# 1 "testmap.h" 1
-# 22 "testmap.h"
-extern const unsigned short testmapTiles[832];
+# 1 "Level1.h" 1
+# 22 "Level1.h"
+extern const unsigned short Level1Tiles[8560];
 
 
-extern const unsigned short testmapMap[1024];
+extern const unsigned short Level1Map[11264];
 
 
-extern const unsigned short testmapPal[256];
+extern const unsigned short Level1Pal[256];
 # 6 "game.c" 2
-# 1 "testcollisionmap.h" 1
-# 20 "testcollisionmap.h"
-extern const unsigned short testcollisionmapBitmap[38400];
-# 7 "game.c" 2
+
+int currentScreenBlock = 10;
+int currentTileMapDivision = 0;
+short shouldWin;
+short shouldLose;
 void updateGame() {
     updatePlayer();
 }
 
 void updatePlayer() {
     updateSonic();
+
+
+
+
+
+
 }
 
 void drawGame() {
@@ -176,13 +193,17 @@ void drawGame() {
 }
 
 void initializeGame() {
+    hOff = 0;
+    vOff = 0;
     initializeBackground();
     initializeSonic();
 }
 
 void initializeBackground() {
-    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (0 << 7) | (0 << 14) | ((8) << 8);
-    copyToBGPaletteMem(testmapPal, 512 >> 1);
-    copyToCharBlock(testmapTiles, 0, 1664 >> 1);
-    copyToScreenBlock(testmapMap, 8, 2048 >> 1);
+
+
+    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (0 << 7) | (1 << 14) | ((currentScreenBlock) << 8);
+    copyToBGPaletteMem(Level1Pal, 512 >> 1);
+    copyToCharBlock(Level1Tiles, 0, (17120 >> 1));
+    copyToScreenBlock(Level1Map, 10, (22528 >> 1));
 }

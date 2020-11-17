@@ -1,13 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "myLib.h"
-#include "sonic.h"
+#include "mario.h"
 #include "game.h"
 #include "titleScreen.h"
 #include "instructionScreen.h"
 #include "winScreen.h"
 #include "loseScreen.h"
 #include "pauseScreen.h"
+#include "Level1.h"
 
 // Prototypes
 void initialize();
@@ -95,6 +96,8 @@ void initialize()
 
 // Sets up the start state
 void goToStart() {
+    REG_BG0HOFF = 0;
+    REG_BG0VOFF = 0;
     //set up background for start screen
     REG_BG0CNT = BG_CHARBLOCK(0) | BG_8BPP | BG_SIZE_SMALL | BG_SCREENBLOCK(24);
     copyToBGPaletteMem(titleScreenPal, titleScreenPalLen >> 1);
@@ -113,6 +116,8 @@ void start() {
 }
 
 void goToInstructions() {
+    REG_BG0HOFF = 0;
+    REG_BG0VOFF = 0;
     REG_BG0CNT = BG_CHARBLOCK(0) | BG_8BPP | BG_SIZE_SMALL | BG_SCREENBLOCK(24);
     copyToBGPaletteMem(instructionScreenPal, instructionScreenPalLen >> 1);
     copyToCharBlock(instructionScreenTiles, 0, instructionScreenTilesLen >> 1);
@@ -139,6 +144,29 @@ void game() {
     drawGame();
     waitForVBlank();
     copyShadowOAM();
+    if (currentScreenBlock == 10 && hOff < 0) {
+        hOff = 0;
+    }
+
+    if (currentScreenBlock == 19 && hOff >= 512 - SCREENWIDTH - 20) {
+        hOff = 512 - SCREENWIDTH - 20;
+    } else {
+        if (hOff >= 256 && currentScreenBlock < 19) {
+            currentScreenBlock++;
+            hOff -= 256;
+            REG_BG0CNT = BG_CHARBLOCK(0) | BG_4BPP | BG_SIZE_WIDE | BG_SCREENBLOCK(currentScreenBlock);
+        }
+        if (hOff < 0 && currentScreenBlock > 10) {
+            currentScreenBlock--;
+            hOff += 256;
+            REG_BG0CNT = BG_CHARBLOCK(0) | BG_4BPP | BG_SIZE_WIDE | BG_SCREENBLOCK(currentScreenBlock);
+        }
+    }
+
+    
+    
+    REG_BG0HOFF = hOff;
+    REG_BG0VOFF = vOff;
     if (BUTTON_PRESSED(BUTTON_START)) {
          goToPause();
     } else if (BUTTON_PRESSED(BUTTON_R)) {
@@ -146,15 +174,17 @@ void game() {
     } else if (BUTTON_PRESSED(BUTTON_L)) {
         goToLose();
     }
-    // if (shouldwin) {
-    //     goToWin();
-    // } else if (shouldLose) {
-    //     goToLose();
-    // } else 
+    if (shouldWin) {
+        goToWin();
+    } else if (shouldLose) {
+        goToLose();
+    }
 }
 
 // Sets up the pause state
 void goToPause() {
+    REG_BG0HOFF = 0;
+    REG_BG0VOFF = 0;
     //sets up background for pause screen
     REG_BG0CNT = BG_CHARBLOCK(0) | BG_8BPP | BG_SIZE_SMALL | BG_SCREENBLOCK(24);
     copyToBGPaletteMem(pauseScreenPal, pauseScreenPalLen >> 1);
@@ -176,6 +206,8 @@ void pause() {
 
 // Sets up the win state
 void goToWin() {
+    REG_BG0HOFF = 0;
+    REG_BG0VOFF = 0;
     //sets up background for win screen
     REG_BG0CNT = BG_CHARBLOCK(0) | BG_8BPP | BG_SIZE_SMALL | BG_SCREENBLOCK(24);
     copyToBGPaletteMem(winScreenPal, winScreenPalLen >> 1);
@@ -196,6 +228,8 @@ void win() {
 
 // Sets up the lose state
 void goToLose() {
+    REG_BG0HOFF = 0;
+    REG_BG0VOFF = 0;
     //sets up background for lose state
     REG_BG0CNT = BG_CHARBLOCK(0) | BG_8BPP | BG_SIZE_SMALL | BG_SCREENBLOCK(24);
     copyToBGPaletteMem(loseScreenPal, loseScreenPalLen >> 1);

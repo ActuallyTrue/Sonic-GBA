@@ -53,6 +53,9 @@ typedef unsigned int u32;
 #define REG_BG3HOFF (*(volatile unsigned short *)0x0400001C)
 #define REG_BG3VOFF (*(volatile unsigned short *)0x0400001E)
 
+extern int hOff;
+extern int vOff;
+
 // Display Status Registers
 #define SCANLINECOUNTER (*(volatile unsigned short *)0x4000006)
 
