@@ -27,37 +27,39 @@ void updateSonic() {
     }
 
     if(BUTTON_HELD(BUTTON_LEFT)) {
-        if (player.grounded) {
-            if (player.colVelocity > 0) {
-            player.colVelocity -= DECELERATION;
-            } else {
-                player.colVelocity -= player.running ? RUNNINGACCELERATION : WALKINGACCELERATION;
-            }
-        } else {
-            if (player.colVelocity > 0) {
-            player.colVelocity -= AIRACCELERATION;
-            } else {
-                player.colVelocity -= AIRACCELERATION;
-            }
-        }
+        player.colVelocity = player.running ? -SHIFTUP(2) : -SHIFTUP(1);
+        // if (player.grounded) {
+        //     if (player.colVelocity > 0) {
+        //     player.colVelocity = SHIFTUP(-1);//-= DECELERATION;
+        //     } else {
+        //         player.colVelocity = SHIFTUP(-2);//-= player.running ? RUNNINGACCELERATION : WALKINGACCELERATION;
+        //     }
+        // } else {
+        //     if (player.colVelocity > 0) {
+        //     player.colVelocity = SHIFTUP(-1);//-= AIRACCELERATION;
+        //     } else {
+        //         player.colVelocity = SHIFTUP(-1);//-= AIRACCELERATION;
+        //     }
+        // }
         
         player.flip = false;
         moveInput = true;
     }
     if(BUTTON_HELD(BUTTON_RIGHT)) {
-        if (player.grounded) {
-            if (player.colVelocity < 0) {
-            player.colVelocity += DECELERATION;
-            } else {
-                player.colVelocity += player.running ? RUNNINGACCELERATION : WALKINGACCELERATION;
-            }
-        } else {
-            if (player.colVelocity < 0) {
-                player.colVelocity += AIRACCELERATION;
-            } else {
-                player.colVelocity += AIRACCELERATION;
-            }
-        }
+        player.colVelocity = player.running ? SHIFTUP(2) : SHIFTUP(1);
+        // if (player.grounded) {
+        //     if (player.colVelocity < 0) {
+        //     player.colVelocity = SHIFTUP(1);//+= DECELERATION;
+        //     } else {
+        //         player.colVelocity = SHIFTUP(1);//+= player.running ? RUNNINGACCELERATION : WALKINGACCELERATION;
+        //     }
+        // } else {
+        //     if (player.colVelocity < 0) {
+        //         player.colVelocity = SHIFTUP(1);//+= AIRACCELERATION;
+        //     } else {
+        //         player.colVelocity = SHIFTUP(1);//+= AIRACCELERATION;
+        //     }
+        // }
         player.flip = true;
         moveInput = true;
     }
@@ -230,6 +232,8 @@ void checkCollisionWithMap() {
 
     //     break;
     // }
+    //0x03E0 means green (can go through from bottom, can't go through from top)
+    //0x7FFF means white
     if (player.colVelocity > 0) {
         for (int i = SHIFTDOWN(player.worldCol); i < SHIFTDOWN(player.worldCol + player.colVelocity); i++) {
             if (Level1CollisionMapBitmap[OFFSET(i + player.width - 1, SHIFTDOWN(player.worldRow), 2816)] == 0x7FFF
@@ -248,7 +252,7 @@ void checkCollisionWithMap() {
             && Level1CollisionMapBitmap[OFFSET(i, SHIFTDOWN(player.worldRow) + player.height - 1, 2816)] == 0x7FFF) {
                 continue;
             } else {
-                player.colVelocity = (SHIFTUP(i) - player.worldCol);
+                player.colVelocity = (SHIFTUP(i) - player.worldCol) + 64;
                 player.worldCol += player.colVelocity;
                 player.colVelocity = 0;
             }
@@ -270,14 +274,14 @@ void checkCollisionWithMap() {
     }
 
     if (Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(player.worldCol), SHIFTDOWN(player.worldRow) + 1 + player.height - 1, 2816)] == 0x7FFF
-            && Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(player.worldCol) + player.width - 1, SHIFTDOWN(player.worldRow) + 1 + player.height - 1, 2816)] == 0x7FFF) {
-                player.grounded = false;
+        && Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(player.worldCol) + player.width - 1, SHIFTDOWN(player.worldRow) + 1 + player.height - 1, 2816)] == 0x7FFF) {
+        player.grounded = false;
     }
 
     if (player.rowVelocity < 0) {
         for (int i = SHIFTDOWN(player.worldRow); i > SHIFTDOWN(player.worldRow + player.rowVelocity); i--) {
-            if (Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(player.worldCol), i, 2816)] == 0x7FFF
-            && Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(player.worldCol) + player.width - 2, i, 2816)] == 0x7FFF) {
+            if ((Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(player.worldCol), i, 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(player.worldCol), i, 2816)] == 0x03E0)
+            && Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(player.worldCol) + player.width - 2, i, 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(player.worldCol) + player.width - 2, i, 2816)] == 0x03E0) {
                 continue;
             } else {
                 player.rowVelocity = (SHIFTUP(i) - player.worldRow);  

@@ -183,37 +183,14 @@ void updateSonic() {
     }
 
     if((~((*(volatile unsigned short *)0x04000130)) & ((1<<5)))) {
-        if (player.grounded) {
-            if (player.colVelocity > 0) {
-            player.colVelocity -= 32;
-            } else {
-                player.colVelocity -= player.running ? 6 : 3;
-            }
-        } else {
-            if (player.colVelocity > 0) {
-            player.colVelocity -= 6;
-            } else {
-                player.colVelocity -= 6;
-            }
-        }
-
+        player.colVelocity = player.running ? -((2) << 6) : -((1) << 6);
+# 45 "mario.c"
         player.flip = 0;
         moveInput = 1;
     }
     if((~((*(volatile unsigned short *)0x04000130)) & ((1<<4)))) {
-        if (player.grounded) {
-            if (player.colVelocity < 0) {
-            player.colVelocity += 32;
-            } else {
-                player.colVelocity += player.running ? 6 : 3;
-            }
-        } else {
-            if (player.colVelocity < 0) {
-                player.colVelocity += 6;
-            } else {
-                player.colVelocity += 6;
-            }
-        }
+        player.colVelocity = player.running ? ((2) << 6) : ((1) << 6);
+# 63 "mario.c"
         player.flip = 1;
         moveInput = 1;
     }
@@ -354,7 +331,7 @@ void adjustScreenOffset() {
 }
 
 void checkCollisionWithMap() {
-# 233 "mario.c"
+# 237 "mario.c"
     if (player.colVelocity > 0) {
         for (int i = ((player.worldCol) >> 6); i < ((player.worldCol + player.colVelocity) >> 6); i++) {
             if (Level1CollisionMapBitmap[((((player.worldRow) >> 6))*(2816)+(i + player.width - 1))] == 0x7FFF
@@ -373,7 +350,7 @@ void checkCollisionWithMap() {
             && Level1CollisionMapBitmap[((((player.worldRow) >> 6) + player.height - 1)*(2816)+(i))] == 0x7FFF) {
                 continue;
             } else {
-                player.colVelocity = (((i) << 6) - player.worldCol);
+                player.colVelocity = (((i) << 6) - player.worldCol) + 64;
                 player.worldCol += player.colVelocity;
                 player.colVelocity = 0;
             }
@@ -395,14 +372,14 @@ void checkCollisionWithMap() {
     }
 
     if (Level1CollisionMapBitmap[((((player.worldRow) >> 6) + 1 + player.height - 1)*(2816)+(((player.worldCol) >> 6)))] == 0x7FFF
-            && Level1CollisionMapBitmap[((((player.worldRow) >> 6) + 1 + player.height - 1)*(2816)+(((player.worldCol) >> 6) + player.width - 1))] == 0x7FFF) {
-                player.grounded = 0;
+        && Level1CollisionMapBitmap[((((player.worldRow) >> 6) + 1 + player.height - 1)*(2816)+(((player.worldCol) >> 6) + player.width - 1))] == 0x7FFF) {
+        player.grounded = 0;
     }
 
     if (player.rowVelocity < 0) {
         for (int i = ((player.worldRow) >> 6); i > ((player.worldRow + player.rowVelocity) >> 6); i--) {
-            if (Level1CollisionMapBitmap[((i)*(2816)+(((player.worldCol) >> 6)))] == 0x7FFF
-            && Level1CollisionMapBitmap[((i)*(2816)+(((player.worldCol) >> 6) + player.width - 2))] == 0x7FFF) {
+            if ((Level1CollisionMapBitmap[((i)*(2816)+(((player.worldCol) >> 6)))] == 0x7FFF || Level1CollisionMapBitmap[((i)*(2816)+(((player.worldCol) >> 6)))] == 0x03E0)
+            && Level1CollisionMapBitmap[((i)*(2816)+(((player.worldCol) >> 6) + player.width - 2))] == 0x7FFF || Level1CollisionMapBitmap[((i)*(2816)+(((player.worldCol) >> 6) + player.width - 2))] == 0x03E0) {
                 continue;
             } else {
                 player.rowVelocity = (((i) << 6) - player.worldRow);

@@ -128,13 +128,14 @@ void goToInstructions() {
 void instructions() {
     if (BUTTON_PRESSED(BUTTON_START)) {
         initializeGame();
+        initializeBackground();
         goToGame();
     }
 }
 
 // Sets up the game state
 void goToGame() {
-    initializeBackground();
+    restoreBackground();
     state = GAME;
 }
 

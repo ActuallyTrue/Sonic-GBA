@@ -9,6 +9,7 @@ void updatePlayer();
 void drawGame();
 void initializeGame();
 void initializeBackground();
+void restoreBackground();
 extern int currentScreenBlock;
 extern int currentTileMapDivision;
 extern short shouldWin;
@@ -200,8 +201,15 @@ void initializeGame() {
 }
 
 void initializeBackground() {
+    currentScreenBlock = 10;
+    currentTileMapDivision = 0;
+    (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (0 << 7) | (1 << 14) | ((currentScreenBlock) << 8);
+    copyToBGPaletteMem(Level1Pal, 512 >> 1);
+    copyToCharBlock(Level1Tiles, 0, (17120 >> 1));
+    copyToScreenBlock(Level1Map, 10, (22528 >> 1));
+}
 
-
+void restoreBackground() {
     (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (0 << 7) | (1 << 14) | ((currentScreenBlock) << 8);
     copyToBGPaletteMem(Level1Pal, 512 >> 1);
     copyToCharBlock(Level1Tiles, 0, (17120 >> 1));

@@ -229,8 +229,11 @@ instructions:
 	ldr	r3, .L34+12
 	mov	lr, pc
 	bx	r3
-	mov	r2, #2
 	ldr	r3, .L34+16
+	mov	lr, pc
+	bx	r3
+	mov	r2, #2
+	ldr	r3, .L34+20
 	pop	{r4, lr}
 	str	r2, [r3]
 	bx	lr
@@ -241,6 +244,7 @@ instructions:
 	.word	buttons
 	.word	initializeGame
 	.word	initializeBackground
+	.word	restoreBackground
 	.word	state
 	.size	instructions, .-instructions
 	.align	2
@@ -265,7 +269,7 @@ goToGame:
 .L39:
 	.align	2
 .L38:
-	.word	initializeBackground
+	.word	restoreBackground
 	.word	state
 	.size	goToGame, .-goToGame
 	.align	2
@@ -367,7 +371,7 @@ pause:
 .L58:
 	.word	oldButtons
 	.word	buttons
-	.word	initializeBackground
+	.word	restoreBackground
 	.word	state
 	.size	pause, .-pause
 	.align	2

@@ -1375,6 +1375,7 @@ void updatePlayer();
 void drawGame();
 void initializeGame();
 void initializeBackground();
+void restoreBackground();
 extern int currentScreenBlock;
 extern int currentTileMapDivision;
 extern short shouldWin;
@@ -1559,13 +1560,14 @@ void goToInstructions() {
 void instructions() {
     if (((!(~(oldButtons) & ((1<<3)))) && (~(buttons) & ((1<<3))))) {
         initializeGame();
+        initializeBackground();
         goToGame();
     }
 }
 
 
 void goToGame() {
-    initializeBackground();
+    restoreBackground();
     state = GAME;
 }
 

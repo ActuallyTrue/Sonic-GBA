@@ -84,37 +84,40 @@ initializeBackground:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	mov	r2, #67108864
-	ldr	r3, .L16
-	ldr	r3, [r3]
-	lsl	r3, r3, #24
-	push	{r4, lr}
-	orr	r3, r3, #1073741824
-	lsr	r3, r3, #16
-	strh	r3, [r2, #8]	@ movhi
+	push	{r4, r5, r6, lr}
+	mov	r2, #18944
+	mov	r4, #10
+	mov	r5, #0
+	mov	r3, #67108864
+	ldr	r0, .L16
+	ldr	r1, .L16+4
+	str	r4, [r0]
+	str	r5, [r1]
+	ldr	r0, .L16+8
+	strh	r2, [r3, #8]	@ movhi
 	mov	r1, #256
-	ldr	r0, .L16+4
-	ldr	r3, .L16+8
+	ldr	r3, .L16+12
 	mov	lr, pc
 	bx	r3
-	mov	r1, #0
-	ldr	r2, .L16+12
-	ldr	r0, .L16+16
-	ldr	r3, .L16+20
+	mov	r1, r5
+	ldr	r2, .L16+16
+	ldr	r0, .L16+20
+	ldr	r3, .L16+24
 	mov	lr, pc
 	bx	r3
+	mov	r1, r4
 	mov	r2, #11264
-	mov	r1, #10
-	ldr	r0, .L16+24
-	ldr	r3, .L16+28
+	ldr	r0, .L16+28
+	ldr	r3, .L16+32
 	mov	lr, pc
 	bx	r3
-	pop	{r4, lr}
+	pop	{r4, r5, r6, lr}
 	bx	lr
 .L17:
 	.align	2
 .L16:
 	.word	.LANCHOR0
+	.word	.LANCHOR1
 	.word	Level1Pal
 	.word	copyToBGPaletteMem
 	.word	8560
@@ -152,6 +155,55 @@ initializeGame:
 	.word	vOff
 	.word	initializeSonic
 	.size	initializeGame, .-initializeGame
+	.align	2
+	.global	restoreBackground
+	.syntax unified
+	.arm
+	.fpu softvfp
+	.type	restoreBackground, %function
+restoreBackground:
+	@ Function supports interworking.
+	@ args = 0, pretend = 0, frame = 0
+	@ frame_needed = 0, uses_anonymous_args = 0
+	mov	r2, #67108864
+	ldr	r3, .L24
+	ldr	r3, [r3]
+	lsl	r3, r3, #24
+	push	{r4, lr}
+	orr	r3, r3, #1073741824
+	lsr	r3, r3, #16
+	strh	r3, [r2, #8]	@ movhi
+	mov	r1, #256
+	ldr	r0, .L24+4
+	ldr	r3, .L24+8
+	mov	lr, pc
+	bx	r3
+	mov	r1, #0
+	ldr	r2, .L24+12
+	ldr	r0, .L24+16
+	ldr	r3, .L24+20
+	mov	lr, pc
+	bx	r3
+	mov	r2, #11264
+	mov	r1, #10
+	ldr	r0, .L24+24
+	ldr	r3, .L24+28
+	mov	lr, pc
+	bx	r3
+	pop	{r4, lr}
+	bx	lr
+.L25:
+	.align	2
+.L24:
+	.word	.LANCHOR0
+	.word	Level1Pal
+	.word	copyToBGPaletteMem
+	.word	8560
+	.word	Level1Tiles
+	.word	copyToCharBlock
+	.word	Level1Map
+	.word	copyToScreenBlock
+	.size	restoreBackground, .-restoreBackground
 	.comm	shouldLose,2,2
 	.comm	shouldWin,2,2
 	.global	currentTileMapDivision
@@ -165,6 +217,7 @@ currentScreenBlock:
 	.word	10
 	.bss
 	.align	2
+	.set	.LANCHOR1,. + 0
 	.type	currentTileMapDivision, %object
 	.size	currentTileMapDivision, 4
 currentTileMapDivision:

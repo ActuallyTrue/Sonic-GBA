@@ -34,8 +34,15 @@ void initializeGame() {
 }
 
 void initializeBackground() {
-    //currentScreenBlock = 10;
-    //currentTileMapDivision = 0;
+    currentScreenBlock = 10;
+    currentTileMapDivision = 0;
+    REG_BG0CNT = BG_CHARBLOCK(0) | BG_4BPP | BG_SIZE_WIDE | BG_SCREENBLOCK(currentScreenBlock);
+    copyToBGPaletteMem(Level1Pal, Level1PalLen >> 1);
+    copyToCharBlock(Level1Tiles, 0, (Level1TilesLen >> 1));
+    copyToScreenBlock(Level1Map, 10, (Level1MapLen >> 1));
+}
+
+void restoreBackground() {
     REG_BG0CNT = BG_CHARBLOCK(0) | BG_4BPP | BG_SIZE_WIDE | BG_SCREENBLOCK(currentScreenBlock);
     copyToBGPaletteMem(Level1Pal, Level1PalLen >> 1);
     copyToCharBlock(Level1Tiles, 0, (Level1TilesLen >> 1));
