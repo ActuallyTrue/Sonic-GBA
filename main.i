@@ -1338,7 +1338,7 @@ void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned 
 int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
 # 4 "main.c" 2
 # 1 "mario.h" 1
-# 17 "mario.h"
+# 20 "mario.h"
 typedef struct {
     int worldRow;
     int worldCol;

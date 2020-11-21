@@ -4,14 +4,18 @@
 #include "Level1CollisionMap.h"
 
 SONIC player;
+enum {IDLE, WALK, JUMP,  END};
 
 void initializeSonic() {
     copyToSpritePaletteMem(mariospritesheetPal, mariospritesheetPalLen >> 1);
     copyToCharBlock(mariospritesheetTiles, 4, mariospritesheetTilesLen >> 1);
     player.height = 16;
     player.width = 16;
-    player.worldCol = 0;
-    player.worldRow = 0;
+    player.worldCol = SHIFTUP(20);
+    player.worldRow = SHIFTUP(223);
+    player.curFrame = 0;
+    player.aniCounter = 0;
+    player.aniState = IDLE;
 }
 
 void updateSonic() {
@@ -26,8 +30,15 @@ void updateSonic() {
         player.running = false;
     }
 
+    //keeps previous animation state so that I can tell if the state changed.
+    player.prevAniState = player.aniState;
+
     if(BUTTON_HELD(BUTTON_LEFT)) {
         player.colVelocity = player.running ? -SHIFTUP(2) : -SHIFTUP(1);
+        if (player.grounded) {
+            player.aniState = WALK;
+            player.numFrames = WALKFRAMES;
+        }
         // if (player.grounded) {
         //     if (player.colVelocity > 0) {
         //     player.colVelocity = SHIFTUP(-1);//-= DECELERATION;
@@ -47,6 +58,10 @@ void updateSonic() {
     }
     if(BUTTON_HELD(BUTTON_RIGHT)) {
         player.colVelocity = player.running ? SHIFTUP(2) : SHIFTUP(1);
+        if (player.grounded) {
+            player.aniState = WALK;
+            player.numFrames = WALKFRAMES;
+        }
         // if (player.grounded) {
         //     if (player.colVelocity < 0) {
         //     player.colVelocity = SHIFTUP(1);//+= DECELERATION;
@@ -80,16 +95,24 @@ void updateSonic() {
     }
 
     if (!moveInput) {
+        if (player.grounded) {
+            player.aniState = IDLE;
+            player.numFrames = 0;
+        }
         if (player.colVelocity > 0) {
             player.colVelocity -= DECELERATION;
             if (player.colVelocity < 0) {
                 player.colVelocity = 0;
+                player.aniState = IDLE;
+                player.numFrames = 0;
             }
         }
         if (player.colVelocity < 0) {
             player.colVelocity += DECELERATION;
             if (player.colVelocity > 0) {
                 player.colVelocity = 0;
+                player.aniState = IDLE;
+                player.numFrames = 0;
             }
         }
         
@@ -97,6 +120,8 @@ void updateSonic() {
     if (BUTTON_PRESSED(BUTTON_A) && player.grounded) {
         player.grounded = false;
         player.rowVelocity = player.rowVelocity - JUMPFORCE;
+        player.aniState = JUMP;
+        player.numFrames = 0;
     }
 
     if (BUTTON_RELEASED(BUTTON_A) && !player.grounded) {
@@ -112,29 +137,17 @@ void updateSonic() {
             player.colVelocity = 0;
         }
     }
-    // if (player.worldCol + player.width > SCREENWIDTH * 64) {
-    //     player.worldCol = ((SCREENWIDTH * 64) - player.colVelocity) - (player.width - player.colVelocity);
-    //     if (player.colVelocity != 0) {
-    //         player.colVelocity = 0;
-    //     }
-    // }
-
-    if (player.worldRow < 0) { 
-        player.worldRow = 0;
-        if (player.rowVelocity != 0) {
-            player.rowVelocity = 0;
-        }
-    }
-
-    // if (SHIFTDOWN(player.worldRow) + player.height > SCREENHEIGHT && !player.grounded) {
-    //     player.worldRow = (SHIFTUP(SCREENHEIGHT) - player.rowVelocity) - (SHIFTUP(player.height) - player.rowVelocity);
-    //     player.grounded = true;
-    // } else
     checkCollisionWithMap();
 
     if (player.grounded) {
         player.rowVelocity = 0;
+        if (player.aniState == JUMP) {
+            player.aniState = IDLE;
+            player.numFrames = 0;
+        }
     } else {
+        player.aniState = JUMP;
+        player.numFrames = 0;
          player.rowVelocity += GRAVITY;
     }
 
@@ -142,6 +155,24 @@ void updateSonic() {
 
     player.worldCol += player.colVelocity;
     player.worldRow += player.rowVelocity;
+    if (player.aniState == IDLE) {
+            player.curFrame = 0;
+            player.prevAniState = IDLE;
+    } else {
+        player.aniCounter++;
+    }
+
+    if (player.aniState != player.prevAniState) { //this means you changed states
+        player.curFrame = 0;
+    }
+
+    //only change animation frames every 10 frames.
+    short framesBeforeChange = player.running ? 5 : 7;
+    if (player.aniCounter % framesBeforeChange == 0) {
+        if (++player.curFrame >= player.numFrames) {
+            player.curFrame = 0;
+        }
+    }
 
     adjustScreenOffset();
     
@@ -300,5 +331,5 @@ void drawSonic() {
     } else {
         shadowOAM[0].attr1 &= ~ATTR1_HFLIP;
     }
-	shadowOAM[0].attr2 = ATTR2_TILEID(player.aniState * 4, player.curFrame * 4) | ATTR2_PRIORITY(0) | ATTR2_PALROW(0);
+	shadowOAM[0].attr2 = ATTR2_TILEID(player.aniState * 2, player.curFrame * 2) | ATTR2_PRIORITY(0) | ATTR2_PALROW(0);
 }

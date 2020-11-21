@@ -85,30 +85,33 @@ initializeBackground:
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
 	push	{r4, r5, r6, lr}
-	mov	r2, #18944
 	mov	r4, #10
 	mov	r5, #0
+	mov	r2, #18944
+	mov	r0, #96
 	mov	r3, #67108864
-	ldr	r0, .L16
+	ldr	r1, .L16
+	str	r4, [r1]
 	ldr	r1, .L16+4
-	str	r4, [r0]
 	str	r5, [r1]
-	ldr	r0, .L16+8
+	ldr	r1, .L16+8
+	str	r0, [r1]
 	strh	r2, [r3, #8]	@ movhi
 	mov	r1, #256
-	ldr	r3, .L16+12
+	ldr	r0, .L16+12
+	ldr	r3, .L16+16
 	mov	lr, pc
 	bx	r3
 	mov	r1, r5
-	ldr	r2, .L16+16
-	ldr	r0, .L16+20
-	ldr	r3, .L16+24
+	ldr	r2, .L16+20
+	ldr	r0, .L16+24
+	ldr	r3, .L16+28
 	mov	lr, pc
 	bx	r3
 	mov	r1, r4
 	mov	r2, #11264
-	ldr	r0, .L16+28
-	ldr	r3, .L16+32
+	ldr	r0, .L16+32
+	ldr	r3, .L16+36
 	mov	lr, pc
 	bx	r3
 	pop	{r4, r5, r6, lr}
@@ -118,6 +121,7 @@ initializeBackground:
 .L16:
 	.word	.LANCHOR0
 	.word	.LANCHOR1
+	.word	vOff
 	.word	Level1Pal
 	.word	copyToBGPaletteMem
 	.word	8560

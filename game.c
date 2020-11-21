@@ -36,6 +36,7 @@ void initializeGame() {
 void initializeBackground() {
     currentScreenBlock = 10;
     currentTileMapDivision = 0;
+    vOff = 256 - SCREENHEIGHT;
     REG_BG0CNT = BG_CHARBLOCK(0) | BG_4BPP | BG_SIZE_WIDE | BG_SCREENBLOCK(currentScreenBlock);
     copyToBGPaletteMem(Level1Pal, Level1PalLen >> 1);
     copyToCharBlock(Level1Tiles, 0, (Level1TilesLen >> 1));

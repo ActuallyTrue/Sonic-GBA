@@ -129,7 +129,7 @@ void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned 
 int collision(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
 # 4 "game.c" 2
 # 1 "mario.h" 1
-# 17 "mario.h"
+# 20 "mario.h"
 typedef struct {
     int worldRow;
     int worldCol;
@@ -203,6 +203,7 @@ void initializeGame() {
 void initializeBackground() {
     currentScreenBlock = 10;
     currentTileMapDivision = 0;
+    vOff = 256 - 160;
     (*(volatile unsigned short *)0x4000008) = ((0) << 2) | (0 << 7) | (1 << 14) | ((currentScreenBlock) << 8);
     copyToBGPaletteMem(Level1Pal, 512 >> 1);
     copyToCharBlock(Level1Tiles, 0, (17120 >> 1));

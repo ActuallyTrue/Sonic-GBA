@@ -13,6 +13,9 @@
 #define JUMPFORCE 416
 #define GRAVITY 14
 
+//Animation constants
+#define WALKFRAMES 3
+
 //Jumping Constants
 typedef struct {
     int worldRow;

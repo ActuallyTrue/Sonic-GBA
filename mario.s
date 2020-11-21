@@ -29,26 +29,30 @@ initializeSonic:
 	bx	r3
 	mov	r2, #16384
 	mov	r1, #4
-	ldr	r3, .L4+8
-	ldr	r0, .L4+12
+	ldr	r0, .L4+8
+	ldr	r3, .L4+12
 	mov	lr, pc
 	bx	r3
-	mov	r1, #16
 	mov	r2, #0
+	mov	r1, #16
+	mov	ip, #1280
+	mov	r0, #14272
 	ldr	r3, .L4+16
 	pop	{r4, lr}
+	stm	r3, {r0, ip}
 	str	r1, [r3, #32]
 	str	r1, [r3, #28]
-	str	r2, [r3, #4]
-	str	r2, [r3]
+	str	r2, [r3, #48]
+	str	r2, [r3, #36]
+	str	r2, [r3, #40]
 	bx	lr
 .L5:
 	.align	2
 .L4:
 	.word	mariospritesheetPal
 	.word	copyToSpritePaletteMem
-	.word	copyToCharBlock
 	.word	mariospritesheetTiles
+	.word	copyToCharBlock
 	.word	player
 	.size	initializeSonic, .-initializeSonic
 	.align	2
@@ -433,6 +437,7 @@ checkCollisionWithMap:
 	.word	Level1CollisionMapBitmap
 	.word	32767
 	.size	checkCollisionWithMap, .-checkCollisionWithMap
+	.global	__aeabi_idivmod
 	.align	2
 	.global	updateSonic
 	.syntax unified
@@ -443,208 +448,256 @@ updateSonic:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	ldr	r3, .L158
+	ldr	r3, .L159
 	ldrh	r3, [r3, #48]
 	tst	r3, #2
 	moveq	r3, #1
 	push	{r4, lr}
-	ldreq	r4, .L158+4
+	ldreq	r4, .L159+4
 	strheq	r3, [r4, #66]	@ movhi
-	ldr	r3, .L158+8
-	ldrh	r2, [r3]
-	ldrne	r4, .L158+4
-	ands	r3, r2, #2
-	ldr	r1, .L158+12
-	bne	.L82
-	ldrh	r0, [r1]
-	tst	r0, #2
-	beq	.L82
-	strh	r3, [r4, #66]	@ movhi
-	ldr	r0, .L158
-	ldrh	r3, [r0, #48]
-	ands	r3, r3, #32
-	beq	.L120
-	ldrh	r3, [r0, #48]
-	tst	r3, #16
-	beq	.L84
-	ldr	r3, [r4, #12]
-	cmp	r3, #192
-	ble	.L89
-	mov	r3, #192
-	str	r3, [r4, #12]
-	b	.L90
-.L82:
-	ldr	r3, .L158
-	ldrh	r3, [r3, #48]
-	tst	r3, #32
-	movne	ip, #0
-	ldrsh	r3, [r4, #66]
-	bne	.L86
-	cmp	r3, #0
-	mvneq	ip, #63
-	mvnne	ip, #127
-.L83:
-	mov	r0, #0
-	str	ip, [r4, #12]
-	mov	ip, #1
-	str	r0, [r4, #60]
-.L86:
-	ldr	r0, .L158
-	ldrh	r0, [r0, #48]
-	tst	r0, #16
-	bne	.L87
-	cmp	r3, #0
-	beq	.L84
-	mov	r0, #128
-	mov	r3, #1
-	str	r0, [r4, #12]
-	str	r3, [r4, #60]
-.L117:
-	ldrh	r3, [r1]
-	tst	r2, #1
-	and	r3, r3, #1
-	beq	.L102
-.L156:
-	cmp	r3, #0
-	bne	.L103
+	ldr	r3, .L159+8
+	ldrh	r0, [r3]
+	ldr	r3, .L159+12
+	ldrne	r4, .L159+4
+	ands	r1, r0, #2
+	ldrh	r3, [r3]
+	bne	.L85
+	tst	r3, #2
+	beq	.L85
+	strh	r1, [r4, #66]	@ movhi
+	ldr	ip, .L159
+	ldrh	r2, [ip, #48]
+	ldr	lr, [r4, #40]
+	ands	r2, r2, #32
+	str	lr, [r4, #44]
+	beq	.L127
+	ldrh	r2, [ip, #48]
+	tst	r2, #16
+	beq	.L87
+	ldr	r2, [r4, #12]
+.L92:
+	cmp	r2, #192
+	ble	.L94
+	mov	r2, #192
+	str	r2, [r4, #12]
+.L95:
+	cmp	r1, #0
+	bne	.L120
 	ldrsh	r2, [r4, #64]
 	cmp	r2, #0
-	bne	.L153
-.L103:
+	ldr	r2, [r4, #12]
+	strne	r1, [r4, #40]
+	strne	r1, [r4, #52]
+	cmp	r2, #0
+	ble	.L98
+	subs	r2, r2, #32
+	bmi	.L100
+.L155:
+	tst	r0, #1
+	str	r2, [r4, #12]
+	and	r3, r3, #1
+	bne	.L156
+.L101:
+	cmp	r3, #0
+	beq	.L102
+	ldrsh	r3, [r4, #64]
+	cmp	r3, #0
+	beq	.L157
+.L102:
 	ldr	r3, [r4, #4]
 	cmp	r3, #0
-	bge	.L105
+	bge	.L104
 	mov	r3, #0
 	ldr	r2, [r4, #12]
 	cmp	r2, r3
 	str	r3, [r4, #4]
 	strne	r3, [r4, #12]
-.L105:
-	ldr	r3, [r4]
-	cmp	r3, #0
-	bge	.L108
-	mov	r3, #0
-	ldr	r2, [r4, #8]
-	cmp	r2, r3
-	str	r3, [r4]
-	strne	r3, [r4, #8]
-.L108:
+.L104:
 	bl	checkCollisionWithMap
-	ldrsh	r3, [r4, #64]
-	cmp	r3, #0
-	movne	r1, #0
-	ldreq	r1, [r4, #8]
+	ldrsh	r1, [r4, #64]
+	cmp	r1, #0
+	beq	.L106
+	mov	r2, #0
+	ldr	r3, [r4, #40]
+	cmp	r3, #2
+	str	r2, [r4, #8]
+	beq	.L158
 	ldr	r2, [r4, #4]
-	ldr	r3, [r4]
-	ldr	r0, [r4, #12]
-	addeq	r1, r1, #14
-	add	r2, r2, r0
-	add	r3, r3, r1
-	str	r1, [r4, #8]
+	ldr	r1, [r4, #12]
+	cmp	r3, #0
+	add	r2, r2, r1
 	str	r2, [r4, #4]
-	str	r3, [r4]
+	ldr	r0, [r4, #36]
+	bne	.L109
+.L108:
+	mov	r3, #0
+	str	r3, [r4, #48]
+	str	r3, [r4, #44]
+.L110:
+	ldrsh	r3, [r4, #66]
+	cmp	r3, #0
+	movne	r1, #5
+	moveq	r1, #7
+	ldr	r3, .L159+16
+	mov	lr, pc
+	bx	r3
+	cmp	r1, #0
+	bne	.L113
+	ldr	r3, [r4, #48]
+	ldr	r2, [r4, #52]
+	add	r3, r3, #1
+	cmp	r3, r2
+	movlt	r1, r3
+	str	r1, [r4, #48]
+.L113:
 	pop	{r4, lr}
 	b	adjustScreenOffset
-.L87:
-	cmp	r3, #0
-	ldr	r3, [r4, #12]
-	beq	.L154
-	cmp	r3, #384
-	ble	.L155
-	mov	r3, #384
-	str	r3, [r4, #12]
-.L95:
+.L85:
+	ldr	r2, .L159
+	ldrh	r1, [r2, #48]
+	ldr	r2, [r4, #40]
+	tst	r1, #32
+	str	r2, [r4, #44]
+	movne	r1, #0
+	ldrsh	r2, [r4, #66]
+	bne	.L84
+	cmp	r2, #0
+	mvneq	r1, #63
+	mvnne	r1, #127
+.L86:
+	ldrsh	ip, [r4, #64]
 	cmp	ip, #0
-	bne	.L117
-.L90:
-	ldr	r3, [r4, #12]
-.L118:
-	subs	r3, r3, #32
-	bmi	.L101
-.L152:
-	str	r3, [r4, #12]
-.L157:
-	ldrh	r3, [r1]
-	tst	r2, #1
+	movne	ip, #1
+	str	r1, [r4, #12]
+	movne	r1, #3
+	strne	ip, [r4, #40]
+	mov	ip, #0
+	strne	r1, [r4, #52]
+	mov	r1, #1
+	str	ip, [r4, #60]
+.L84:
+	ldr	ip, .L159
+	ldrh	ip, [ip, #48]
+	tst	ip, #16
+	bne	.L90
+	cmp	r2, #0
+	beq	.L87
+	mov	r2, #128
+	ldrsh	r1, [r4, #64]
+	cmp	r1, #0
+	str	r2, [r4, #12]
+	bne	.L125
+.L153:
+	mov	r2, #1
+	str	r2, [r4, #60]
+.L120:
+	tst	r0, #1
 	and	r3, r3, #1
-	bne	.L156
-.L102:
+	beq	.L101
+.L156:
 	cmp	r3, #0
-	beq	.L103
-	ldrsh	r3, [r4, #64]
-	cmp	r3, #0
-	bne	.L103
+	bne	.L102
+	ldrsh	r2, [r4, #64]
+	cmp	r2, #0
+	beq	.L102
+	mov	r1, #2
+	ldr	r2, [r4, #8]
+	sub	r2, r2, #416
+	strh	r3, [r4, #64]	@ movhi
+	str	r3, [r4, #52]
+	str	r2, [r4, #8]
+	str	r1, [r4, #40]
+	b	.L102
+.L90:
+	cmp	r2, #0
+	ldr	r2, [r4, #12]
+	beq	.L92
+	cmp	r2, #384
+	movgt	r2, #384
+	strgt	r2, [r4, #12]
+	bgt	.L95
+	cmn	r2, #384
+	ldrlt	r2, .L159+20
+	strlt	r2, [r4, #12]
+	b	.L95
+.L87:
+	mov	r2, #64
+	ldrsh	r1, [r4, #64]
+	cmp	r1, #0
+	str	r2, [r4, #12]
+	beq	.L153
+.L125:
+	mov	r2, #1
+	mov	r1, #3
+	str	r2, [r4, #40]
+	str	r2, [r4, #60]
+	str	r1, [r4, #52]
+	b	.L120
+.L106:
+	mov	r3, #2
+	ldr	r2, [r4, #8]
+	ldr	ip, [r4]
+	ldr	r0, [r4, #4]
+	ldr	lr, [r4, #12]
+	add	r2, r2, #14
+	add	r0, r0, lr
+	add	ip, ip, r2
+	str	r0, [r4, #4]
+	str	r1, [r4, #52]
+	str	r2, [r4, #8]
+	str	ip, [r4]
+	str	r3, [r4, #40]
+	ldr	r0, [r4, #36]
+.L109:
+	ldr	r2, [r4, #44]
+	cmp	r2, r3
+	movne	r3, #0
+	add	r0, r0, #1
+	str	r0, [r4, #36]
+	strne	r3, [r4, #48]
+	b	.L110
+.L98:
+	beq	.L120
+	add	r2, r2, #32
+	cmp	r2, #0
+	ble	.L155
+.L100:
+	mov	r2, #0
+	str	r2, [r4, #12]
+	str	r2, [r4, #40]
+	str	r2, [r4, #52]
+	b	.L120
+.L157:
 	ldr	r3, [r4, #8]
 	cmn	r3, #256
 	mvnlt	r3, #255
 	strlt	r3, [r4, #8]
-	b	.L103
-.L155:
-	cmn	r3, #384
-	ldrlt	r3, .L158+16
-	strlt	r3, [r4, #12]
-	bge	.L113
-.L97:
-	cmp	ip, #0
-	bne	.L117
-.L96:
-	ldr	r3, [r4, #12]
-.L119:
-	add	r3, r3, #32
-	cmp	r3, #0
-	ble	.L152
-.L101:
-	mov	r3, #0
-	str	r3, [r4, #12]
-	b	.L157
-.L84:
-	mov	r0, #64
-	mov	r3, #1
-	str	r0, [r4, #12]
-	str	r3, [r4, #60]
-	b	.L117
-.L120:
-	mvn	ip, #63
-	b	.L83
-.L153:
-	ldr	r2, [r4, #8]
-	sub	r2, r2, #416
-	strh	r3, [r4, #64]	@ movhi
-	str	r2, [r4, #8]
-	b	.L103
-.L154:
-	cmp	r3, #192
-	ble	.L94
-	mov	r3, #192
-	str	r3, [r4, #12]
-	b	.L95
-.L89:
-	cmn	r3, #192
-	mvnlt	r3, #191
-	strlt	r3, [r4, #12]
-	blt	.L96
-.L92:
-	ldr	r3, [r4, #12]
-	cmp	r3, #0
-	bgt	.L118
-	blt	.L119
-	b	.L117
-.L94:
-	cmn	r3, #192
-	mvnlt	r3, #191
-	strlt	r3, [r4, #12]
-	blt	.L97
-.L113:
-	cmp	ip, #0
-	beq	.L92
-	b	.L117
-.L159:
-	.align	2
+	b	.L102
+.L127:
+	mvn	r1, #63
+	b	.L86
 .L158:
+	ldr	r1, [r4, #4]
+	ldr	r3, [r4, #12]
+	add	r3, r3, r1
+	str	r2, [r4, #40]
+	str	r2, [r4, #52]
+	str	r3, [r4, #4]
+	ldr	r0, [r4, #36]
+	b	.L108
+.L94:
+	cmn	r2, #192
+	mvnlt	r2, #191
+	strlt	r2, [r4, #12]
+	b	.L95
+.L160:
+	.align	2
+.L159:
 	.word	67109120
 	.word	player
 	.word	oldButtons
 	.word	buttons
+	.word	__aeabi_idivmod
 	.word	-384
 	.size	updateSonic, .-updateSonic
 	.align	2
@@ -657,13 +710,13 @@ drawSonic:
 	@ Function supports interworking.
 	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 0, uses_anonymous_args = 0
-	ldr	r2, .L166
-	ldr	r3, .L166+4
+	ldr	r2, .L167
+	ldr	r3, .L167+4
 	ldr	r1, [r2, #4]
 	ldr	r3, [r3]
 	rsb	r3, r3, r1, asr #6
 	rsbs	r1, r3, #0
-	ldr	r0, .L166+8
+	ldr	r0, .L167+8
 	and	r1, r1, #255
 	and	r3, r3, #255
 	rsbpl	r3, r1, #0
@@ -672,7 +725,7 @@ drawSonic:
 	ldr	lr, [r2]
 	ldr	ip, [r2, #60]
 	lsl	r3, r3, #23
-	ldr	r0, .L166+12
+	ldr	r0, .L167+12
 	lsr	r3, r3, #23
 	orr	r3, r3, #16384
 	rsb	r1, r1, lr, asr #6
@@ -685,13 +738,13 @@ drawSonic:
 	ldr	r1, [r2, #48]
 	ldr	r3, [r2, #40]
 	add	r3, r3, r1, lsl #5
-	lsl	r3, r3, #2
+	lsl	r3, r3, #1
 	strh	r3, [r0, #4]	@ movhi
 	ldr	lr, [sp], #4
 	bx	lr
-.L167:
+.L168:
 	.align	2
-.L166:
+.L167:
 	.word	player
 	.word	hOff
 	.word	vOff

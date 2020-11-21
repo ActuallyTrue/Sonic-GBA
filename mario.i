@@ -3,7 +3,7 @@
 # 1 "<command-line>"
 # 1 "mario.c"
 # 1 "mario.h" 1
-# 17 "mario.h"
+# 20 "mario.h"
 typedef struct {
     int worldRow;
     int worldCol;
@@ -160,14 +160,18 @@ extern const unsigned short Level1CollisionMapBitmap[720896];
 # 5 "mario.c" 2
 
 SONIC player;
+enum {IDLE, WALK, JUMP, END};
 
 void initializeSonic() {
     copyToSpritePaletteMem(mariospritesheetPal, 512 >> 1);
     copyToCharBlock(mariospritesheetTiles, 4, 32768 >> 1);
     player.height = 16;
     player.width = 16;
-    player.worldCol = 0;
-    player.worldRow = 0;
+    player.worldCol = ((20) << 6);
+    player.worldRow = ((223) << 6);
+    player.curFrame = 0;
+    player.aniCounter = 0;
+    player.aniState = IDLE;
 }
 
 void updateSonic() {
@@ -182,15 +186,26 @@ void updateSonic() {
         player.running = 0;
     }
 
+
+    player.prevAniState = player.aniState;
+
     if((~((*(volatile unsigned short *)0x04000130)) & ((1<<5)))) {
         player.colVelocity = player.running ? -((2) << 6) : -((1) << 6);
-# 45 "mario.c"
+        if (player.grounded) {
+            player.aniState = WALK;
+            player.numFrames = 3;
+        }
+# 56 "mario.c"
         player.flip = 0;
         moveInput = 1;
     }
     if((~((*(volatile unsigned short *)0x04000130)) & ((1<<4)))) {
         player.colVelocity = player.running ? ((2) << 6) : ((1) << 6);
-# 63 "mario.c"
+        if (player.grounded) {
+            player.aniState = WALK;
+            player.numFrames = 3;
+        }
+# 78 "mario.c"
         player.flip = 1;
         moveInput = 1;
     }
@@ -211,16 +226,24 @@ void updateSonic() {
     }
 
     if (!moveInput) {
+        if (player.grounded) {
+            player.aniState = IDLE;
+            player.numFrames = 0;
+        }
         if (player.colVelocity > 0) {
             player.colVelocity -= 32;
             if (player.colVelocity < 0) {
                 player.colVelocity = 0;
+                player.aniState = IDLE;
+                player.numFrames = 0;
             }
         }
         if (player.colVelocity < 0) {
             player.colVelocity += 32;
             if (player.colVelocity > 0) {
                 player.colVelocity = 0;
+                player.aniState = IDLE;
+                player.numFrames = 0;
             }
         }
 
@@ -228,6 +251,8 @@ void updateSonic() {
     if (((!(~(oldButtons) & ((1<<0)))) && (~(buttons) & ((1<<0)))) && player.grounded) {
         player.grounded = 0;
         player.rowVelocity = player.rowVelocity - 416;
+        player.aniState = JUMP;
+        player.numFrames = 0;
     }
 
     if ((((~(oldButtons) & ((1<<0)))) && !(~(buttons) & ((1<<0)))) && !player.grounded) {
@@ -243,29 +268,17 @@ void updateSonic() {
             player.colVelocity = 0;
         }
     }
-
-
-
-
-
-
-
-    if (player.worldRow < 0) {
-        player.worldRow = 0;
-        if (player.rowVelocity != 0) {
-            player.rowVelocity = 0;
-        }
-    }
-
-
-
-
-
     checkCollisionWithMap();
 
     if (player.grounded) {
         player.rowVelocity = 0;
+        if (player.aniState == JUMP) {
+            player.aniState = IDLE;
+            player.numFrames = 0;
+        }
     } else {
+        player.aniState = JUMP;
+        player.numFrames = 0;
          player.rowVelocity += 14;
     }
 
@@ -273,6 +286,24 @@ void updateSonic() {
 
     player.worldCol += player.colVelocity;
     player.worldRow += player.rowVelocity;
+    if (player.aniState == IDLE) {
+            player.curFrame = 0;
+            player.prevAniState = IDLE;
+    } else {
+        player.aniCounter++;
+    }
+
+    if (player.aniState != player.prevAniState) {
+        player.curFrame = 0;
+    }
+
+
+    short framesBeforeChange = player.running ? 5 : 7;
+    if (player.aniCounter % framesBeforeChange == 0) {
+        if (++player.curFrame >= player.numFrames) {
+            player.curFrame = 0;
+        }
+    }
 
     adjustScreenOffset();
 
@@ -331,7 +362,7 @@ void adjustScreenOffset() {
 }
 
 void checkCollisionWithMap() {
-# 237 "mario.c"
+# 268 "mario.c"
     if (player.colVelocity > 0) {
         for (int i = ((player.worldCol) >> 6); i < ((player.worldCol + player.colVelocity) >> 6); i++) {
             if (Level1CollisionMapBitmap[((((player.worldRow) >> 6))*(2816)+(i + player.width - 1))] == 0x7FFF
@@ -398,5 +429,5 @@ void drawSonic() {
     } else {
         shadowOAM[0].attr1 &= ~(1 << 12);
     }
- shadowOAM[0].attr2 = ((player.curFrame * 4)*32 + (player.aniState * 4)) | ((0) << 10) | ((0) << 12);
+ shadowOAM[0].attr2 = ((player.curFrame * 2)*32 + (player.aniState * 2)) | ((0) << 10) | ((0) << 12);
 }
