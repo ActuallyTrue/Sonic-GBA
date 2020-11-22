@@ -2,8 +2,9 @@
 #include "myLib.h"
 #include "mariospritesheet.h"
 #include "Level1CollisionMap.h"
+#include "game.h"
 
-SONIC player;
+MARIO player;
 enum {IDLE, WALK, JUMP,  END};
 
 void initializeSonic() {
@@ -16,9 +17,11 @@ void initializeSonic() {
     player.curFrame = 0;
     player.aniCounter = 0;
     player.aniState = IDLE;
+    player.hOff = hOff;
+    player.vOff = vOff;
 }
 
-void updateSonic() {
+void updateMario() {
     // Control movement
     short moveInput = false;
 
@@ -166,7 +169,7 @@ void updateSonic() {
         player.curFrame = 0;
     }
 
-    //only change animation frames every 10 frames.
+    //only change animation frames every 5 or 7 frames depending on if you're running.
     short framesBeforeChange = player.running ? 5 : 7;
     if (player.aniCounter % framesBeforeChange == 0) {
         if (++player.curFrame >= player.numFrames) {
@@ -180,14 +183,16 @@ void updateSonic() {
 
 void adjustScreenOffset() {
     if (player.rowVelocity < 0) { //if you're moving up
-        if (vOff > 0 && (SHIFTDOWN(player.worldRow) - vOff)  % 256 <= SCREENHEIGHT/2) {
+        if (vOff > 0 && (SHIFTDOWN(player.worldRow) - vOff)  % 256 <= SCREENHEIGHT/4) {
                 // Update background offset variable if the above is true
                 if (vOff += SHIFTDOWN(player.rowVelocity) > 0) {
                     vOff += SHIFTDOWN(player.rowVelocity);
+                    player.vOff += SHIFTDOWN(player.rowVelocity);
                 }
 
                 if (vOff < 0) {
                     vOff = 0;
+                    player.vOff = 0;
                 }
                 
         }
@@ -196,11 +201,11 @@ void adjustScreenOffset() {
     if (player.rowVelocity > 0) { //if you're moving down
         if (vOff < 256 - SCREENHEIGHT && (SHIFTDOWN(player.worldRow) - vOff) + player.height  % 256 >= SCREENHEIGHT/2) {
                 // Update background offset variable if the above is true
-                if (vOff += SHIFTDOWN(player.rowVelocity) < 256 - SCREENHEIGHT) {
-                    vOff += SHIFTDOWN(player.rowVelocity);
-                } 
+                vOff += SHIFTDOWN(player.rowVelocity);
+                player.vOff += SHIFTDOWN(player.rowVelocity); 
                 if (vOff > 256 - SCREENHEIGHT) {
                     vOff = 256 - SCREENHEIGHT;
+                    player.vOff = 256 - SCREENHEIGHT;
                 }
         }
     }
@@ -208,10 +213,19 @@ void adjustScreenOffset() {
     if (player.colVelocity < 0) { //if you're moving left
         if ((SHIFTDOWN(player.worldCol) - hOff)  % 256 <= SCREENWIDTH/2) {
                 // Update background offset variable if the above is true
-                if (SHIFTDOWN(player.colVelocity) > -1) {
-                    hOff--;
+                // if (SHIFTDOWN(player.colVelocity) > -1) {
+                //     hOff--;
+                //     player.hOff--;
+                // } else {
+                //     hOff += SHIFTDOWN(player.colVelocity);
+                //     player.hOff += SHIFTDOWN(player.colVelocity);
+                // }
+                if (player.running) {
+                    hOff += -2;
+                    player.hOff += -2;
                 } else {
-                    hOff += SHIFTDOWN(player.colVelocity);
+                    hOff--;
+                    player.hOff--;
                 }
         }
     }
@@ -219,10 +233,19 @@ void adjustScreenOffset() {
     if (player.colVelocity > 0) { //if you're moving right
         if ((SHIFTDOWN(player.worldCol) - hOff) + player.width % 256 >= SCREENWIDTH/2) {
                 // Update background offset variable if the above is true
-                if (SHIFTDOWN(player.colVelocity) < 1) {
-                    hOff++;
+                // if (SHIFTDOWN(player.colVelocity) < 1) {
+                //     hOff++;
+                //     player.hOff++;
+                // } else {
+                //     hOff += SHIFTDOWN(player.colVelocity);
+                //     player.hOff += SHIFTDOWN(player.colVelocity);
+                // }
+                if (player.running) {
+                    hOff += 2;
+                    player.hOff += 2;
                 } else {
-                    hOff += SHIFTDOWN(player.colVelocity);
+                    hOff++;
+                    player.hOff++;
                 }
                 
         }
@@ -231,44 +254,12 @@ void adjustScreenOffset() {
 }
 
 void checkCollisionWithMap() {
-    // short situation;
-    // if (player.colVelocity > 0 && player.rowVelocity > 0) {
-    //     situation = 0; //moving right and down
-    // } else if (player.colVelocity < 0 && player.rowVelocity > 0) {
-    //     situation = 2; //moving left and down
-    // } else if (player.colVelocity > 0 && player.rowVelocity < 0) {
-    //     situation = 3; //moving right and up
-    // } else if (player.colVelocity < 0 && player.rowVelocity < 0) {
-    //     situation = 4; //moving left and up
-    // } else if (player.colVelocity == 0 && player.rowVelocity > 0) {
-    //     //moving straight down
-    // } else if (player.colVelocity == 0 && player.rowVelocity < 0) {
-    //     //moving straight up
-    // } else if (player.colVelocity > 0 && player.rowVelocity == 0) {
-    //     //moving straight right
-    // }
-
-    // switch (situation) {
-    //     case 0: //moving right and down
-    //         int xIterator = player.worldCol;
-    //         int yIterator = 0;
-    //     break;
-    //     case 1: //moving left and down
-
-    //     break;
-    //     case 2: //moving right and up
-
-    //     break;
-    //     case 3: //moving left and up
-
-    //     break;
-    // }
     //0x03E0 means green (can go through from bottom, can't go through from top)
     //0x7FFF means white
     if (player.colVelocity > 0) {
         for (int i = SHIFTDOWN(player.worldCol); i < SHIFTDOWN(player.worldCol + player.colVelocity); i++) {
-            if (Level1CollisionMapBitmap[OFFSET(i + player.width - 1, SHIFTDOWN(player.worldRow), 2816)] == 0x7FFF
-            && Level1CollisionMapBitmap[OFFSET(i + player.width - 1, SHIFTDOWN(player.worldRow) + player.height - 1, 2816)] == 0x7FFF) {
+            if ((Level1CollisionMapBitmap[OFFSET(i + player.width - 1, SHIFTDOWN(player.worldRow), 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(i + player.width - 1, SHIFTDOWN(player.worldRow), 2816)] == 0x03E0)
+            && (Level1CollisionMapBitmap[OFFSET(i + player.width - 1, SHIFTDOWN(player.worldRow) + player.height - 1, 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(i + player.width - 1, SHIFTDOWN(player.worldRow) + player.height - 1, 2816)] == 0x03E0)) {
                 continue;
             } else {
                 player.colVelocity = (SHIFTUP(i) - player.worldCol);
@@ -279,8 +270,8 @@ void checkCollisionWithMap() {
     }
     if (player.colVelocity < 0) {
         for (int i = SHIFTDOWN(player.worldCol); i > SHIFTDOWN(player.worldCol + player.colVelocity) && i > 0; i--) {
-            if (Level1CollisionMapBitmap[OFFSET(i, SHIFTDOWN(player.worldRow), 2816)] == 0x7FFF
-            && Level1CollisionMapBitmap[OFFSET(i, SHIFTDOWN(player.worldRow) + player.height - 1, 2816)] == 0x7FFF) {
+            if ((Level1CollisionMapBitmap[OFFSET(i, SHIFTDOWN(player.worldRow), 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(i, SHIFTDOWN(player.worldRow), 2816)] == 0x03E0)
+            && (Level1CollisionMapBitmap[OFFSET(i, SHIFTDOWN(player.worldRow) + player.height - 1, 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(i, SHIFTDOWN(player.worldRow) + player.height - 1, 2816)] == 0x03E0)) {
                 continue;
             } else {
                 player.colVelocity = (SHIFTUP(i) - player.worldCol) + 64;
@@ -319,10 +310,14 @@ void checkCollisionWithMap() {
             }
         }
     }
+
+    if (SHIFTDOWN(player.worldRow) + player.height >= 256) {
+        shouldLose = true;
+    }
     
 }
 
-void drawSonic() {
+void drawMario() {
     shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR;
 	shadowOAM[0].attr1 = (COLMASK & (SHIFTDOWN(player.worldCol) - hOff) % 256) | ATTR1_SMALL;
     //flips the player depending on its flip variable (which is changed when you move left and right)

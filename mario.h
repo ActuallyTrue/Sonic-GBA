@@ -16,15 +16,11 @@
 //Animation constants
 #define WALKFRAMES 3
 
-//Jumping Constants
 typedef struct {
     int worldRow;
     int worldCol;
     int rowVelocity;
     int colVelocity;
-    int groundSpeed;
-    int slope;
-    int angle;
     int width;
     int height;
     int aniCounter;
@@ -38,11 +34,11 @@ typedef struct {
     short running;
     int hOff;
     int vOff;
-} SONIC;
+} MARIO;
 
-extern SONIC player;
+extern MARIO player;
 void initializeSonic();
-void drawSonic();
-void updateSonic();
+void drawMario();
+void updateMario();
 void checkCollisionWithMap();
 void adjustScreenOffset();

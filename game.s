@@ -30,7 +30,7 @@ updateGame:
 .L5:
 	.align	2
 .L4:
-	.word	updateSonic
+	.word	updateMario
 	.size	updateGame, .-updateGame
 	.align	2
 	.global	updatePlayer
@@ -51,7 +51,7 @@ updatePlayer:
 .L9:
 	.align	2
 .L8:
-	.word	updateSonic
+	.word	updateMario
 	.size	updatePlayer, .-updatePlayer
 	.align	2
 	.global	drawGame
@@ -67,12 +67,16 @@ drawGame:
 	ldr	r3, .L12
 	mov	lr, pc
 	bx	r3
+	ldr	r3, .L12+4
+	mov	lr, pc
+	bx	r3
 	pop	{r4, lr}
 	bx	lr
 .L13:
 	.align	2
 .L12:
-	.word	drawSonic
+	.word	drawMario
+	.word	drawItemBlocks
 	.size	drawGame, .-drawGame
 	.align	2
 	.global	initializeBackground
@@ -124,7 +128,7 @@ initializeBackground:
 	.word	vOff
 	.word	Level1Pal
 	.word	copyToBGPaletteMem
-	.word	8560
+	.word	7712
 	.word	Level1Tiles
 	.word	copyToCharBlock
 	.word	Level1Map
@@ -150,6 +154,9 @@ initializeGame:
 	ldr	r3, .L20+8
 	mov	lr, pc
 	bx	r3
+	ldr	r3, .L20+12
+	mov	lr, pc
+	bx	r3
 	pop	{r4, lr}
 	bx	lr
 .L21:
@@ -158,6 +165,7 @@ initializeGame:
 	.word	hOff
 	.word	vOff
 	.word	initializeSonic
+	.word	initializeItemBlocks
 	.size	initializeGame, .-initializeGame
 	.align	2
 	.global	restoreBackground
@@ -202,12 +210,95 @@ restoreBackground:
 	.word	.LANCHOR0
 	.word	Level1Pal
 	.word	copyToBGPaletteMem
-	.word	8560
+	.word	7712
 	.word	Level1Tiles
 	.word	copyToCharBlock
 	.word	Level1Map
 	.word	copyToScreenBlock
 	.size	restoreBackground, .-restoreBackground
+	.align	2
+	.global	lastScreenOffsetAdjustment
+	.syntax unified
+	.arm
+	.fpu softvfp
+	.type	lastScreenOffsetAdjustment, %function
+lastScreenOffsetAdjustment:
+	@ Function supports interworking.
+	@ args = 0, pretend = 0, frame = 0
+	@ frame_needed = 0, uses_anonymous_args = 0
+	ldr	r0, .L41
+	ldr	r3, [r0]
+	ldr	r1, .L41+4
+	cmp	r3, #10
+	str	lr, [sp, #-4]!
+	ldr	r2, [r1]
+	beq	.L39
+	cmp	r3, #19
+	bne	.L30
+	cmp	r2, #251
+	movgt	r3, #252
+	strgt	r3, [r1]
+	bgt	.L26
+	cmp	r2, #0
+	bge	.L26
+.L35:
+	mov	lr, #67108864
+	sub	r3, r3, #1
+	lsl	ip, r3, #24
+	orr	ip, ip, #1073741824
+	lsr	ip, ip, #16
+	add	r2, r2, #256
+	str	r3, [r0]
+	str	r2, [r1]
+	strh	ip, [lr, #8]	@ movhi
+.L26:
+	ldr	lr, [sp], #4
+	bx	lr
+.L30:
+	cmp	r3, #18
+	movle	ip, #1
+	movgt	ip, #0
+	cmp	r2, #255
+	movle	ip, #0
+	cmp	ip, #0
+	bne	.L36
+	cmp	r2, #0
+	bge	.L26
+	cmp	r3, #10
+	bgt	.L35
+	ldr	lr, [sp], #4
+	bx	lr
+.L39:
+	cmp	r2, #0
+	blt	.L40
+	cmp	r2, #255
+	ble	.L26
+.L36:
+	mov	lr, #67108864
+	add	r3, r3, #1
+	lsl	ip, r3, #24
+	orr	ip, ip, #1073741824
+	lsr	ip, ip, #16
+	sub	r2, r2, #256
+	str	r3, [r0]
+	str	r2, [r1]
+	strh	ip, [lr, #8]	@ movhi
+	ldr	lr, [sp], #4
+	bx	lr
+.L40:
+	mov	r3, #0
+	ldr	r2, .L41+8
+	str	r3, [r1]
+	str	r3, [r2, #56]
+	ldr	lr, [sp], #4
+	bx	lr
+.L42:
+	.align	2
+.L41:
+	.word	.LANCHOR0
+	.word	hOff
+	.word	player
+	.size	lastScreenOffsetAdjustment, .-lastScreenOffsetAdjustment
 	.comm	shouldLose,2,2
 	.comm	shouldWin,2,2
 	.global	currentTileMapDivision

@@ -144,28 +144,8 @@ void game() {
     updateGame();
     drawGame();
     waitForVBlank();
+    lastScreenOffsetAdjustment();
     copyShadowOAM();
-    if (currentScreenBlock == 10 && hOff < 0) {
-        hOff = 0;
-    }
-
-    if (currentScreenBlock == 19 && hOff >= 512 - SCREENWIDTH - 20) {
-        hOff = 512 - SCREENWIDTH - 20;
-    } else {
-        if (hOff >= 256 && currentScreenBlock < 19) {
-            currentScreenBlock++;
-            hOff -= 256;
-            REG_BG0CNT = BG_CHARBLOCK(0) | BG_4BPP | BG_SIZE_WIDE | BG_SCREENBLOCK(currentScreenBlock);
-        }
-        if (hOff < 0 && currentScreenBlock > 10) {
-            currentScreenBlock--;
-            hOff += 256;
-            REG_BG0CNT = BG_CHARBLOCK(0) | BG_4BPP | BG_SIZE_WIDE | BG_SCREENBLOCK(currentScreenBlock);
-        }
-    }
-
-    
-    
     REG_BG0HOFF = hOff;
     REG_BG0VOFF = vOff;
     if (BUTTON_PRESSED(BUTTON_START)) {
@@ -178,6 +158,7 @@ void game() {
     if (shouldWin) {
         goToWin();
     } else if (shouldLose) {
+        shouldLose = false;
         goToLose();
     }
 }

@@ -3,15 +3,12 @@
 # 1 "<command-line>"
 # 1 "mario.c"
 # 1 "mario.h" 1
-# 20 "mario.h"
+# 19 "mario.h"
 typedef struct {
     int worldRow;
     int worldCol;
     int rowVelocity;
     int colVelocity;
-    int groundSpeed;
-    int slope;
-    int angle;
     int width;
     int height;
     int aniCounter;
@@ -25,12 +22,12 @@ typedef struct {
     short running;
     int hOff;
     int vOff;
-} SONIC;
+} MARIO;
 
-extern SONIC player;
+extern MARIO player;
 void initializeSonic();
-void drawSonic();
-void updateSonic();
+void drawMario();
+void updateMario();
 void checkCollisionWithMap();
 void adjustScreenOffset();
 # 2 "mario.c" 2
@@ -158,8 +155,21 @@ extern const unsigned short mariospritesheetPal[256];
 # 20 "Level1CollisionMap.h"
 extern const unsigned short Level1CollisionMapBitmap[720896];
 # 5 "mario.c" 2
+# 1 "game.h" 1
+void updateGame();
+void updatePlayer();
+void drawGame();
+void initializeGame();
+void initializeBackground();
+void restoreBackground();
+void lastScreenOffsetAdjustment();
+extern int currentScreenBlock;
+extern int currentTileMapDivision;
+extern short shouldWin;
+extern short shouldLose;
+# 6 "mario.c" 2
 
-SONIC player;
+MARIO player;
 enum {IDLE, WALK, JUMP, END};
 
 void initializeSonic() {
@@ -172,9 +182,11 @@ void initializeSonic() {
     player.curFrame = 0;
     player.aniCounter = 0;
     player.aniState = IDLE;
+    player.hOff = hOff;
+    player.vOff = vOff;
 }
 
-void updateSonic() {
+void updateMario() {
 
     short moveInput = 0;
 
@@ -195,7 +207,7 @@ void updateSonic() {
             player.aniState = WALK;
             player.numFrames = 3;
         }
-# 56 "mario.c"
+# 59 "mario.c"
         player.flip = 0;
         moveInput = 1;
     }
@@ -205,7 +217,7 @@ void updateSonic() {
             player.aniState = WALK;
             player.numFrames = 3;
         }
-# 78 "mario.c"
+# 81 "mario.c"
         player.flip = 1;
         moveInput = 1;
     }
@@ -311,14 +323,16 @@ void updateSonic() {
 
 void adjustScreenOffset() {
     if (player.rowVelocity < 0) {
-        if (vOff > 0 && (((player.worldRow) >> 6) - vOff) % 256 <= 160/2) {
+        if (vOff > 0 && (((player.worldRow) >> 6) - vOff) % 256 <= 160/4) {
 
                 if (vOff += ((player.rowVelocity) >> 6) > 0) {
                     vOff += ((player.rowVelocity) >> 6);
+                    player.vOff += ((player.rowVelocity) >> 6);
                 }
 
                 if (vOff < 0) {
                     vOff = 0;
+                    player.vOff = 0;
                 }
 
         }
@@ -327,33 +341,37 @@ void adjustScreenOffset() {
     if (player.rowVelocity > 0) {
         if (vOff < 256 - 160 && (((player.worldRow) >> 6) - vOff) + player.height % 256 >= 160/2) {
 
-                if (vOff += ((player.rowVelocity) >> 6) < 256 - 160) {
-                    vOff += ((player.rowVelocity) >> 6);
-                }
+                vOff += ((player.rowVelocity) >> 6);
+                player.vOff += ((player.rowVelocity) >> 6);
                 if (vOff > 256 - 160) {
                     vOff = 256 - 160;
+                    player.vOff = 256 - 160;
                 }
         }
     }
 
     if (player.colVelocity < 0) {
         if ((((player.worldCol) >> 6) - hOff) % 256 <= 240/2) {
-
-                if (((player.colVelocity) >> 6) > -1) {
-                    hOff--;
+# 223 "mario.c"
+                if (player.running) {
+                    hOff += -2;
+                    player.hOff += -2;
                 } else {
-                    hOff += ((player.colVelocity) >> 6);
+                    hOff--;
+                    player.hOff--;
                 }
         }
     }
 
     if (player.colVelocity > 0) {
         if ((((player.worldCol) >> 6) - hOff) + player.width % 256 >= 240/2) {
-
-                if (((player.colVelocity) >> 6) < 1) {
-                    hOff++;
+# 243 "mario.c"
+                if (player.running) {
+                    hOff += 2;
+                    player.hOff += 2;
                 } else {
-                    hOff += ((player.colVelocity) >> 6);
+                    hOff++;
+                    player.hOff++;
                 }
 
         }
@@ -362,11 +380,12 @@ void adjustScreenOffset() {
 }
 
 void checkCollisionWithMap() {
-# 268 "mario.c"
+
+
     if (player.colVelocity > 0) {
         for (int i = ((player.worldCol) >> 6); i < ((player.worldCol + player.colVelocity) >> 6); i++) {
-            if (Level1CollisionMapBitmap[((((player.worldRow) >> 6))*(2816)+(i + player.width - 1))] == 0x7FFF
-            && Level1CollisionMapBitmap[((((player.worldRow) >> 6) + player.height - 1)*(2816)+(i + player.width - 1))] == 0x7FFF) {
+            if ((Level1CollisionMapBitmap[((((player.worldRow) >> 6))*(2816)+(i + player.width - 1))] == 0x7FFF || Level1CollisionMapBitmap[((((player.worldRow) >> 6))*(2816)+(i + player.width - 1))] == 0x03E0)
+            && (Level1CollisionMapBitmap[((((player.worldRow) >> 6) + player.height - 1)*(2816)+(i + player.width - 1))] == 0x7FFF || Level1CollisionMapBitmap[((((player.worldRow) >> 6) + player.height - 1)*(2816)+(i + player.width - 1))] == 0x03E0)) {
                 continue;
             } else {
                 player.colVelocity = (((i) << 6) - player.worldCol);
@@ -377,8 +396,8 @@ void checkCollisionWithMap() {
     }
     if (player.colVelocity < 0) {
         for (int i = ((player.worldCol) >> 6); i > ((player.worldCol + player.colVelocity) >> 6) && i > 0; i--) {
-            if (Level1CollisionMapBitmap[((((player.worldRow) >> 6))*(2816)+(i))] == 0x7FFF
-            && Level1CollisionMapBitmap[((((player.worldRow) >> 6) + player.height - 1)*(2816)+(i))] == 0x7FFF) {
+            if ((Level1CollisionMapBitmap[((((player.worldRow) >> 6))*(2816)+(i))] == 0x7FFF || Level1CollisionMapBitmap[((((player.worldRow) >> 6))*(2816)+(i))] == 0x03E0)
+            && (Level1CollisionMapBitmap[((((player.worldRow) >> 6) + player.height - 1)*(2816)+(i))] == 0x7FFF || Level1CollisionMapBitmap[((((player.worldRow) >> 6) + player.height - 1)*(2816)+(i))] == 0x03E0)) {
                 continue;
             } else {
                 player.colVelocity = (((i) << 6) - player.worldCol) + 64;
@@ -418,9 +437,13 @@ void checkCollisionWithMap() {
         }
     }
 
+    if (((player.worldRow) >> 6) + player.height >= 256) {
+        shouldLose = 1;
+    }
+
 }
 
-void drawSonic() {
+void drawMario() {
     shadowOAM[0].attr0 = (0xFF & (((player.worldRow) >> 6) - vOff) % 256) | (0 << 14) | (0 << 13) | (0 << 8);
  shadowOAM[0].attr1 = (0x1FF & (((player.worldCol) >> 6) - hOff) % 256) | (1 << 14);
 

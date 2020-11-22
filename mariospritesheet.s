@@ -756,38 +756,38 @@ mariospritesheetTiles:
 	.short	0
 	.short	0
 	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
+	.short	-16
+	.short	-1
+	.short	14079
+	.short	13107
+	.short	13167
+	.short	26214
+	.short	25455
+	.short	17476
+	.short	17263
+	.short	17476
+	.short	17263
+	.short	-188
+	.short	25455
+	.short	28671
+	.short	25455
+	.short	17510
+	.short	-1
+	.short	4095
+	.short	13107
+	.short	-154
+	.short	26214
+	.short	-2458
+	.short	25668
+	.short	-2458
+	.short	17476
+	.short	-2458
+	.short	17487
+	.short	-2449
+	.short	17478
+	.short	-2449
+	.short	-3004
+	.short	-2449
 	.short	0
 	.short	-17487
 	.short	0
@@ -1268,38 +1268,38 @@ mariospritesheetTiles:
 	.short	0
 	.short	0
 	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
+	.short	25455
+	.short	17510
+	.short	25455
+	.short	-2458
+	.short	25455
+	.short	17510
+	.short	26223
+	.short	17510
+	.short	26223
+	.short	-2458
+	.short	26223
+	.short	26214
+	.short	26367
+	.short	26214
+	.short	-16
+	.short	-1
+	.short	-12
+	.short	-2458
+	.short	26367
+	.short	-2458
+	.short	26212
+	.short	-2458
+	.short	26356
+	.short	-2458
+	.short	26367
+	.short	-2458
+	.short	26214
+	.short	-2458
+	.short	26214
+	.short	-154
+	.short	-1
+	.short	4095
 	.short	0
 	.short	0
 	.short	0
@@ -1780,38 +1780,38 @@ mariospritesheetTiles:
 	.short	0
 	.short	0
 	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
+	.short	-16
+	.short	-1
+	.short	14079
+	.short	13107
+	.short	13167
+	.short	26214
+	.short	25455
+	.short	26214
+	.short	25455
+	.short	26214
+	.short	25455
+	.short	26214
+	.short	25455
+	.short	26214
+	.short	25455
+	.short	26214
+	.short	-1
+	.short	4095
+	.short	13107
+	.short	-154
+	.short	26214
+	.short	-2458
+	.short	26214
+	.short	-2458
+	.short	26214
+	.short	-2458
+	.short	26214
+	.short	-2458
+	.short	26214
+	.short	-2458
+	.short	26214
+	.short	-2458
 	.short	0
 	.short	0
 	.short	0
@@ -2292,38 +2292,38 @@ mariospritesheetTiles:
 	.short	0
 	.short	0
 	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
-	.short	0
+	.short	25455
+	.short	26214
+	.short	25455
+	.short	26214
+	.short	25455
+	.short	26214
+	.short	26223
+	.short	26214
+	.short	26223
+	.short	26214
+	.short	26223
+	.short	26214
+	.short	26367
+	.short	26214
+	.short	-16
+	.short	-1
+	.short	26214
+	.short	-2458
+	.short	26214
+	.short	-2458
+	.short	26214
+	.short	-2458
+	.short	26214
+	.short	-2458
+	.short	26214
+	.short	-2458
+	.short	26214
+	.short	-2458
+	.short	26214
+	.short	-154
+	.short	-1
+	.short	4095
 	.short	0
 	.short	0
 	.short	0
