@@ -155,6 +155,7 @@ extern MARIO player;
 void initializeSonic();
 void drawMario();
 void updateMario();
+void checkCollisionWithItemBlocks();
 void checkCollisionWithMap();
 void adjustScreenOffset();
 # 5 "entities.c" 2
@@ -211,6 +212,7 @@ void initializeItemBlocks() {
     for (int i = 0; i < 7; i++) {
         itemBlocks[i].height = 16;
         itemBlocks[i].width = 16;
+        itemBlocks[i].hit = 0;
         shadowOAM[i + 1].attr2 = ((0)*32 + (30)) | ((0) << 10) | ((0) << 12);
         switch(i) {
             case 0:

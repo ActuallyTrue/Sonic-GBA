@@ -40,5 +40,6 @@ extern MARIO player;
 void initializeSonic();
 void drawMario();
 void updateMario();
+void checkCollisionWithItemBlocks();
 void checkCollisionWithMap();
 void adjustScreenOffset();

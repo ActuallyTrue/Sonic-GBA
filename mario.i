@@ -28,6 +28,7 @@ extern MARIO player;
 void initializeSonic();
 void drawMario();
 void updateMario();
+void checkCollisionWithItemBlocks();
 void checkCollisionWithMap();
 void adjustScreenOffset();
 # 2 "mario.c" 2
@@ -168,6 +169,41 @@ extern int currentTileMapDivision;
 extern short shouldWin;
 extern short shouldLose;
 # 6 "mario.c" 2
+# 1 "entities.h" 1
+
+
+
+typedef struct {
+    int worldRow;
+    int worldCol;
+    int width;
+    int height;
+    int hit;
+} ITEMBLOCK;
+
+typedef struct {
+    int worldRow;
+    int worldCol;
+    int rowVelocity;
+    int colVelocity;
+    int width;
+    int height;
+    int aniCounter;
+    int aniState;
+    int prevAniState;
+    int curFrame;
+    int numFrames;
+    int hide;
+    int flip;
+} ENEMY;
+
+extern ITEMBLOCK itemBlocks[7];
+extern ENEMY enemies[6];
+
+void initializeItemBlocks();
+void drawItemBlocks();
+void intializeEnemies();
+# 7 "mario.c" 2
 
 MARIO player;
 enum {IDLE, WALK, JUMP, END};
@@ -207,7 +243,7 @@ void updateMario() {
             player.aniState = WALK;
             player.numFrames = 3;
         }
-# 59 "mario.c"
+# 60 "mario.c"
         player.flip = 0;
         moveInput = 1;
     }
@@ -217,7 +253,7 @@ void updateMario() {
             player.aniState = WALK;
             player.numFrames = 3;
         }
-# 81 "mario.c"
+# 82 "mario.c"
         player.flip = 1;
         moveInput = 1;
     }
@@ -281,6 +317,7 @@ void updateMario() {
         }
     }
     checkCollisionWithMap();
+    checkCollisionWithItemBlocks();
 
     if (player.grounded) {
         player.rowVelocity = 0;
@@ -352,7 +389,7 @@ void adjustScreenOffset() {
 
     if (player.colVelocity < 0) {
         if ((((player.worldCol) >> 6) - hOff) % 256 <= 240/2) {
-# 223 "mario.c"
+# 225 "mario.c"
                 if (player.running) {
                     hOff += -2;
                     player.hOff += -2;
@@ -365,7 +402,7 @@ void adjustScreenOffset() {
 
     if (player.colVelocity > 0) {
         if ((((player.worldCol) >> 6) - hOff) + player.width % 256 >= 240/2) {
-# 243 "mario.c"
+# 245 "mario.c"
                 if (player.running) {
                     hOff += 2;
                     player.hOff += 2;
@@ -377,6 +414,71 @@ void adjustScreenOffset() {
         }
     }
 
+}
+
+void checkCollisionWithItemBlocks() {
+    for (int i = 0; i < 7; i++) {
+        if (((((itemBlocks[i].worldCol) >> 6) - player.hOff) < 240 && (((itemBlocks[i].worldCol) >> 6) - player.hOff) + itemBlocks[i].width > 0)
+        && ((((itemBlocks[i].worldRow) >> 6) - player.vOff) < 160 && (((itemBlocks[i].worldRow) >> 6) - player.vOff) > 0)) {
+            if (player.rowVelocity < 0) {
+                    for (int j = ((player.worldRow) >> 6); j > ((player.worldRow + player.rowVelocity) >> 6); j--) {
+                        if (collision(((player.worldCol) >> 6),j, player.width, player.height, ((itemBlocks[i].worldCol) >> 6), ((itemBlocks[i].worldRow) >> 6), itemBlocks[i].width, itemBlocks[i].height)) {
+
+                            j++;
+                            player.rowVelocity = (((j) << 6) - player.worldRow);
+                            player.worldRow += player.rowVelocity;
+                            player.rowVelocity = 0;
+                            player.grounded = 1;
+                            itemBlocks[i].hit = 1;
+                            break;
+                        }
+                    }
+            }
+            if (player.colVelocity > 0) {
+                for (int j = ((player.worldCol) >> 6); j < ((player.worldCol + player.colVelocity) >> 6); j++) {
+                    if (collision(j,((player.worldRow) >> 6),player.width, player.height, ((itemBlocks[i].worldCol) >> 6), ((itemBlocks[i].worldRow) >> 6), itemBlocks[i].width, itemBlocks[i].height)) {
+
+                        j--;
+                        player.colVelocity = (((j) << 6) - player.worldCol);
+                        player.worldCol += player.colVelocity;
+                        player.colVelocity = 0;
+                        return;
+                    }
+                }
+            }
+            if (player.colVelocity < 0) {
+                for (int j = ((player.worldCol) >> 6); j > ((player.worldCol + player.colVelocity) >> 6) && i > 0; j--) {
+                    if (collision(j,((player.worldRow) >> 6), player.width, player.height, ((itemBlocks[i].worldCol) >> 6), ((itemBlocks[i].worldRow) >> 6), itemBlocks[i].width, itemBlocks[i].height)) {
+
+                        j++;
+                        player.colVelocity = (((j) << 6) - player.worldCol);
+                        player.worldCol += player.colVelocity;
+                        player.colVelocity = 0;
+                        break;
+                    }
+                }
+            }
+
+            if (player.rowVelocity > 0) {
+                for (int j = ((player.worldRow) >> 6); j < ((player.worldRow + player.rowVelocity) >> 6); j++) {
+                    if (collision(((player.worldCol) >> 6),j, player.width, player.height, ((itemBlocks[i].worldCol) >> 6), ((itemBlocks[i].worldRow) >> 6), itemBlocks[i].width, itemBlocks[i].height)) {
+
+                        j--;
+                        player.rowVelocity = (((j) << 6) - player.worldRow);
+                        player.worldRow += player.rowVelocity;
+                        player.rowVelocity = 0;
+                        player.grounded = 1;
+                        break;
+                    }
+                }
+            }
+            if (((player.worldRow) >> 6) < ((itemBlocks[i].worldRow) >> 6)) {
+                if (collision(((player.worldCol) >> 6), ((player.worldRow) >> 6) + 1, player.width, player.height, ((itemBlocks[i].worldCol) >> 6), ((itemBlocks[i].worldRow) >> 6), itemBlocks[i].width, itemBlocks[i].height)) {
+                    player.grounded = 1;
+                }
+            }
+        }
+    }
 }
 
 void checkCollisionWithMap() {

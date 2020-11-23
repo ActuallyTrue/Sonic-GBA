@@ -3,6 +3,7 @@
 #include "mariospritesheet.h"
 #include "Level1CollisionMap.h"
 #include "game.h"
+#include "entities.h"
 
 MARIO player;
 enum {IDLE, WALK, JUMP,  END};
@@ -141,6 +142,7 @@ void updateMario() {
         }
     }
     checkCollisionWithMap();
+    checkCollisionWithItemBlocks();
 
     if (player.grounded) {
         player.rowVelocity = 0;
@@ -251,6 +253,71 @@ void adjustScreenOffset() {
         }
     }
     
+}
+
+void checkCollisionWithItemBlocks() {
+    for (int i = 0; i < ITEMBLOCKCOUNT; i++) {
+        if (((SHIFTDOWN(itemBlocks[i].worldCol) - player.hOff) < SCREENWIDTH  && (SHIFTDOWN(itemBlocks[i].worldCol) - player.hOff) + itemBlocks[i].width > 0)
+        && ((SHIFTDOWN(itemBlocks[i].worldRow) - player.vOff) < SCREENHEIGHT  && (SHIFTDOWN(itemBlocks[i].worldRow) - player.vOff) > 0)) { //this means it's on the screen
+            if (player.rowVelocity < 0) { // moving up
+                    for (int j = SHIFTDOWN(player.worldRow); j > SHIFTDOWN(player.worldRow + player.rowVelocity); j--) {
+                        if (collision(SHIFTDOWN(player.worldCol),j, player.width, player.height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
+                            //if this is true, you collided from the bottom
+                            j++;
+                            player.rowVelocity = (SHIFTUP(j) - player.worldRow); 
+                            player.worldRow += player.rowVelocity;
+                            player.rowVelocity = 0;
+                            player.grounded = true;
+                            itemBlocks[i].hit = true;
+                            break;
+                        }
+                    }
+            }
+            if (player.colVelocity > 0) { // moving right
+                for (int j = SHIFTDOWN(player.worldCol); j < SHIFTDOWN(player.worldCol + player.colVelocity); j++) {
+                    if (collision(j,SHIFTDOWN(player.worldRow),player.width, player.height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
+                        //if this is true, you collided from the left
+                        j--;
+                        player.colVelocity = (SHIFTUP(j) - player.worldCol);
+                        player.worldCol += player.colVelocity;
+                        player.colVelocity = 0;
+                        return;
+                    }
+                }
+            }
+            if (player.colVelocity < 0) { //moving left
+                for (int j = SHIFTDOWN(player.worldCol); j > SHIFTDOWN(player.worldCol + player.colVelocity) && i > 0; j--) {
+                    if (collision(j,SHIFTDOWN(player.worldRow), player.width, player.height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
+                        //if this is true, you collided from the right
+                        j++;
+                        player.colVelocity = (SHIFTUP(j) - player.worldCol);
+                        player.worldCol += player.colVelocity;
+                        player.colVelocity = 0;
+                        break;
+                    }
+                }
+            }
+
+            if (player.rowVelocity > 0) { // moving down
+                for (int j = SHIFTDOWN(player.worldRow); j < SHIFTDOWN(player.worldRow + player.rowVelocity); j++) {
+                    if (collision(SHIFTDOWN(player.worldCol),j, player.width, player.height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
+                        //if this is true, you collided from the top
+                        j--;
+                        player.rowVelocity = (SHIFTUP(j) - player.worldRow);
+                        player.worldRow += player.rowVelocity;
+                        player.rowVelocity = 0;
+                        player.grounded = true;
+                        break;
+                    }
+                }
+            }
+            if (SHIFTDOWN(player.worldRow) < SHIFTDOWN(itemBlocks[i].worldRow)) {
+                if (collision(SHIFTDOWN(player.worldCol), SHIFTDOWN(player.worldRow) + 1, player.width, player.height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
+                    player.grounded = true;
+                }
+            } 
+        } 
+    }
 }
 
 void checkCollisionWithMap() {

@@ -12,6 +12,7 @@ void initializeItemBlocks() {
     for (int i = 0; i < ITEMBLOCKCOUNT; i++) {
         itemBlocks[i].height = 16;
         itemBlocks[i].width = 16;
+        itemBlocks[i].hit = false;
         shadowOAM[i + 1].attr2 = ATTR2_TILEID(30, 0) | ATTR2_PRIORITY(0) | ATTR2_PALROW(0);
         switch(i) {
             case 0:
