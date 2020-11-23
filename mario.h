@@ -34,12 +34,16 @@ typedef struct {
     short running;
     int hOff;
     int vOff;
+    int powerUpState;
 } MARIO;
 
 extern MARIO player;
 void initializeSonic();
 void drawMario();
 void updateMario();
+void advanceToMushroom();
+void advanceToFireFlower();
 void checkCollisionWithItemBlocks();
+void checkCollisionWithItems();
 void checkCollisionWithMap();
 void adjustScreenOffset();

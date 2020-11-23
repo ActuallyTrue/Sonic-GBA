@@ -7,6 +7,7 @@
 
 MARIO player;
 enum {IDLE, WALK, JUMP,  END};
+enum {NORMAL, BIG};
 
 void initializeSonic() {
     copyToSpritePaletteMem(mariospritesheetPal, mariospritesheetPalLen >> 1);
@@ -20,6 +21,7 @@ void initializeSonic() {
     player.aniState = IDLE;
     player.hOff = hOff;
     player.vOff = vOff;
+    player.powerUpState = NORMAL;
 }
 
 void updateMario() {
@@ -180,6 +182,7 @@ void updateMario() {
     }
 
     adjustScreenOffset();
+    checkCollisionWithItems();
     
 }
 
@@ -253,6 +256,35 @@ void adjustScreenOffset() {
         }
     }
     
+}
+
+void advanceToMushroom() {
+    player.powerUpState = BIG;
+    player.width = 16;
+    player.height = 27;
+}
+void advanceToFireFlower() {
+    player.powerUpState = FIREFLOWER;
+}
+
+void checkCollisionWithItems() {
+    for (int i = 0; i < ITEMCOUNT; i++) {
+        if (items[i].active) {
+            if (collision(SHIFTDOWN(player.worldCol), SHIFTDOWN(player.worldRow), player.width, player.height, SHIFTDOWN(items[i].worldCol), SHIFTDOWN(items[i].worldRow), items[i].width, items[i].height)) {
+                items[i].active = false;
+                switch(items[i].type) {
+                    case COIN:
+                    break;
+                    case MUSHROOM:
+                        advanceToMushroom();
+                    break;
+                    case FIREFLOWER:
+                        advanceToFireFlower();
+                    break;
+                }
+            }
+        }
+    }
 }
 
 void checkCollisionWithItemBlocks() {
@@ -385,13 +417,27 @@ void checkCollisionWithMap() {
 }
 
 void drawMario() {
-    shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR;
-	shadowOAM[0].attr1 = (COLMASK & (SHIFTDOWN(player.worldCol) - hOff) % 256) | ATTR1_SMALL;
-    //flips the player depending on its flip variable (which is changed when you move left and right)
+    switch(player.powerUpState) {
+        case NORMAL:
+            shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR;
+	        shadowOAM[0].attr1 = (COLMASK & (SHIFTDOWN(player.worldCol) - hOff) % 256) | ATTR1_SMALL;
+            shadowOAM[0].attr2 = ATTR2_TILEID(player.aniState * 2, player.curFrame * 2) | ATTR2_PRIORITY(0) | ATTR2_PALROW(0);
+        break;
+        case BIG:
+            shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_TALL | ATTR0_4BPP | ATTR0_REGULAR;
+	        shadowOAM[0].attr1 = (COLMASK & (SHIFTDOWN(player.worldCol) - hOff) % 256) | ATTR1_MEDIUM;
+            shadowOAM[0].attr2 = ATTR2_TILEID((player.aniState + 4) * 2, player.curFrame * 4) | ATTR2_PRIORITY(0) | ATTR2_PALROW(0);
+        break;
+        case FIREFLOWER:
+            shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_TALL | ATTR0_4BPP | ATTR0_REGULAR;
+	        shadowOAM[0].attr1 = (COLMASK & (SHIFTDOWN(player.worldCol) - hOff) % 256) | ATTR1_MEDIUM;
+            shadowOAM[0].attr2 = ATTR2_TILEID((player.aniState + 4) * 2, player.curFrame * 4) | ATTR2_PRIORITY(0) | ATTR2_PALROW(1);
+        break;
+    }
+	//flips the player depending on its flip variable (which is changed when you move left and right)
     if (player.flip) {
         shadowOAM[0].attr1 |= ATTR1_HFLIP;
     } else {
         shadowOAM[0].attr1 &= ~ATTR1_HFLIP;
     }
-	shadowOAM[0].attr2 = ATTR2_TILEID(player.aniState * 2, player.curFrame * 2) | ATTR2_PRIORITY(0) | ATTR2_PALROW(0);
 }

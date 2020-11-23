@@ -9,7 +9,9 @@ int currentTileMapDivision = 0;
 short shouldWin;
 short shouldLose;
 void updateGame() {
+    updateItems();
     updatePlayer();
+    updateItemBlocks();
 }
 
 void updatePlayer() {
@@ -25,6 +27,7 @@ void updatePlayer() {
 void drawGame() {
     drawMario();
     drawItemBlocks();
+    drawItems();
 }
 
 void initializeGame() {
@@ -33,6 +36,7 @@ void initializeGame() {
     initializeBackground();
     initializeSonic();
     initializeItemBlocks();
+    initializeItems();
 }
 
 void initializeBackground() {
