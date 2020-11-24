@@ -15,7 +15,6 @@
 
 
 MARIO player;
-enum {IDLE, WALK, JUMP,  END};
 enum {NORMAL, BIG};
 
 void checkCollisionWithGoombas(ENEMY* goomba);
@@ -36,6 +35,7 @@ void initializeMario() {
     player.invincible = false;
     player.invincibilityCounter = 0;
     player.hide = false;
+    player.coinCount = 0;
 }
 
 void updateMario() {
@@ -80,20 +80,6 @@ void updateMario() {
             player.aniState = WALK;
             player.numFrames = WALKFRAMES;
         }
-        // if (player.grounded) {
-        //     if (player.colVelocity > 0) {
-        //     player.colVelocity = SHIFTUP(-1);//-= DECELERATION;
-        //     } else {
-        //         player.colVelocity = SHIFTUP(-2);//-= player.running ? RUNNINGACCELERATION : WALKINGACCELERATION;
-        //     }
-        // } else {
-        //     if (player.colVelocity > 0) {
-        //     player.colVelocity = SHIFTUP(-1);//-= AIRACCELERATION;
-        //     } else {
-        //         player.colVelocity = SHIFTUP(-1);//-= AIRACCELERATION;
-        //     }
-        // }
-        
         player.flip = false;
         moveInput = true;
     }
@@ -103,36 +89,8 @@ void updateMario() {
             player.aniState = WALK;
             player.numFrames = WALKFRAMES;
         }
-        // if (player.grounded) {
-        //     if (player.colVelocity < 0) {
-        //     player.colVelocity = SHIFTUP(1);//+= DECELERATION;
-        //     } else {
-        //         player.colVelocity = SHIFTUP(1);//+= player.running ? RUNNINGACCELERATION : WALKINGACCELERATION;
-        //     }
-        // } else {
-        //     if (player.colVelocity < 0) {
-        //         player.colVelocity = SHIFTUP(1);//+= AIRACCELERATION;
-        //     } else {
-        //         player.colVelocity = SHIFTUP(1);//+= AIRACCELERATION;
-        //     }
-        // }
         player.flip = true;
         moveInput = true;
-    }
-
-    //top speed checks
-    if (!player.running && player.colVelocity > WALKINGTOPSPEED) {
-        player.colVelocity = WALKINGTOPSPEED;
-    }
-    if (!player.running && player.colVelocity < -WALKINGTOPSPEED) {
-        player.colVelocity = -WALKINGTOPSPEED;
-    }
-
-    if (player.running && player.colVelocity > TOPSPEED) {
-        player.colVelocity = TOPSPEED;
-    }
-    if (player.running && player.colVelocity < -TOPSPEED) {
-        player.colVelocity = -TOPSPEED;
     }
 
     if (!moveInput) {
@@ -289,13 +247,6 @@ void adjustScreenOffset() {
     if (player.colVelocity < 0) { //if you're moving left
         if ((SHIFTDOWN(player.worldCol) - hOff)  % 256 <= SCREENWIDTH/2) {
                 // Update background offset variable if the above is true
-                // if (SHIFTDOWN(player.colVelocity) > -1) {
-                //     hOff--;
-                //     player.hOff--;
-                // } else {
-                //     hOff += SHIFTDOWN(player.colVelocity);
-                //     player.hOff += SHIFTDOWN(player.colVelocity);
-                // }
                 if (player.running) {
                     hOff += -2;
                     player.hOff += -2;
@@ -309,13 +260,6 @@ void adjustScreenOffset() {
     if (player.colVelocity > 0) { //if you're moving right
         if ((SHIFTDOWN(player.worldCol) - hOff) + player.width % 256 >= SCREENWIDTH/2) {
                 // Update background offset variable if the above is true
-                // if (SHIFTDOWN(player.colVelocity) < 1) {
-                //     hOff++;
-                //     player.hOff++;
-                // } else {
-                //     hOff += SHIFTDOWN(player.colVelocity);
-                //     player.hOff += SHIFTDOWN(player.colVelocity);
-                // }
                 if (player.running) {
                     hOff += 2;
                     player.hOff += 2;
@@ -337,8 +281,12 @@ void downToNormal() {
 
 void advanceToMushroom() {
     player.powerUpState = BIG;
+    short originalHeight = player.height;
     player.width = 16;
     player.height = 27;
+    if (player.grounded) {
+        player.worldRow += -SHIFTUP(player.height - originalHeight);
+    }
 }
 void advanceToFireFlower() {
     player.powerUpState = FIREFLOWER;
@@ -356,6 +304,7 @@ void checkCollisionWithItems() {
                 switch(items[i].type) {
                     case COIN:
                         playSoundB(coinSound_data, coinSound_length, false);
+                        player.coinCount++;
                     break;
                     case MUSHROOM:
                         playSoundB(powerUpSound_data, powerUpSound_length, false);
@@ -410,8 +359,10 @@ void checkCollisionWithItemBlocks() {
                                 player.worldRow = SHIFTUP(SHIFTDOWN(itemBlocks[i].worldRow) + itemBlocks[i].height + 1);
                             }
                             player.rowVelocity = SHIFTUP(1);
-                            itemBlocks[i].hit = true;
-                            playSoundB(itemSpawnSound_data, itemSpawnSound_length, false);
+                            if (!itemBlocks[i].hit) {
+                                playSoundB(itemSpawnSound_data, itemSpawnSound_length, false);
+                                itemBlocks[i].hit = true;
+                            }
                             return;
                         }
                     }
@@ -432,8 +383,6 @@ void checkCollisionWithItemBlocks() {
             }
             if (SHIFTDOWN(player.worldRow) < SHIFTDOWN(itemBlocks[i].worldRow)) {
                 if (collision(SHIFTDOWN(player.worldCol), SHIFTDOWN(player.worldRow) + 1, player.width, player.height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
-                    //player.worldRow = SHIFTUP(SHIFTDOWN(itemBlocks[i].worldRow) - player.height);
-                    //player.rowVelocity = 0;
                     player.grounded = true;
                     return;
                 }
@@ -525,7 +474,6 @@ void checkCollisionWithEnemies() {
 void checkCollisionWithGoombas(ENEMY* goomba) {
     if (((SHIFTDOWN(goomba->worldCol) - player.hOff) < SCREENWIDTH  && (SHIFTDOWN(goomba->worldCol) - player.hOff) + goomba->width > 0)
         && ((SHIFTDOWN(goomba->worldRow) - player.vOff) < SCREENHEIGHT  && (SHIFTDOWN(goomba->worldRow) - player.vOff) > 0)) { //this means it's on the screen
-
             if (player.rowVelocity > 0) { // moving down
                 for (int j = SHIFTDOWN(player.worldRow); j < SHIFTDOWN(player.worldRow + player.rowVelocity); j++) {
                     if (collision(SHIFTDOWN(player.worldCol),j, player.width, player.height, SHIFTDOWN(goomba->worldCol), SHIFTDOWN(goomba->worldRow), goomba->width, goomba->height)) {
@@ -549,7 +497,7 @@ void checkCollisionWithGoombas(ENEMY* goomba) {
                 }
             }
 
-            if (SHIFTDOWN(player.worldRow) < SHIFTDOWN(goomba->worldRow)) {
+            if (SHIFTDOWN(player.worldRow) < SHIFTDOWN(goomba->worldRow) && !player.grounded) {
                 if (collision(SHIFTDOWN(player.worldCol), SHIFTDOWN(player.worldRow) + 1, player.width, player.height, SHIFTDOWN(goomba->worldCol), SHIFTDOWN(goomba->worldRow), goomba->width, goomba->height)) {
                     if (BUTTON_HELD(BUTTON_A)) {
                         player.grounded = false;
@@ -592,6 +540,14 @@ void checkCollisionWithGoombas(ENEMY* goomba) {
                         takeDamage();
                         break;
                     }
+                }
+            }
+
+            if (player.grounded) {
+                if (collision(SHIFTDOWN(player.worldCol), SHIFTDOWN(player.worldRow), player.width, player.height, SHIFTDOWN(goomba->worldCol), SHIFTDOWN(goomba->worldRow), goomba->width, goomba->height)) {
+                    //if this is true, you got hit
+                    takeDamage();
+                    return;
                 }
             }
         } 

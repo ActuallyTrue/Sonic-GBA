@@ -252,16 +252,9 @@ void flipPage()
 
 // Set up and begin a DMA transfer
 void DMANow(int channel, volatile const void *src, volatile void *dst, unsigned int cnt) {
-
-    // TODO 4.0: Complete this function
-    // First, turn this channel of DMA off (cnt = 0)
     dma[channel].cnt = 0;
-
-    // Second, set the source and destination registers of this DMA channel to the given parameters
     dma[channel].src = src;
     dma[channel].dst = dst;
-
-    // Finally, set the control to the given parameter, and bitwise-or DMA_ON to the end to turn it on
     dma[channel].cnt = cnt |
                DMA_ON;
 }

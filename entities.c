@@ -173,8 +173,6 @@ void FIREBALLCheckCollisionWithCollisionMap(ITEM* fireBall) {
                 continue;
             } else {
                 fireBall->rowVelocity = -JUMPFORCE/2;
-                //fireBall->worldRow += fireBall->rowVelocity;
-                //fireBall->rowVelocity = 0;
                 return;
             }
         }
@@ -243,8 +241,6 @@ void FIREBALLCheckCollisionWithItemBlocks(ITEM* fireBall) {
                     if (collision(SHIFTDOWN(fireBall->worldCol),j, fireBall->width, fireBall->height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
                         //if this is true, you collided from the top
                         fireBall->rowVelocity = -JUMPFORCE/2;
-                        //fireBall->worldRow += fireBall->rowVelocity;
-                        //fireBall->rowVelocity = 0;
                         return;
                     }
                 }
@@ -332,9 +328,6 @@ void GOOMBACheckCollisionWithCollisionMap(ENEMY* goomba) {
             && (Level1CollisionMapBitmap[OFFSET(i + goomba->width - 1, SHIFTDOWN(goomba->worldRow) + goomba->height - 1, 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(i + goomba->width - 1, SHIFTDOWN(goomba->worldRow) + goomba->height - 1, 2816)] == 0x03E0)) {
                 continue;
             } else {
-                // i--;
-                // goomba->colVelocity = (SHIFTUP(i) - goomba->worldCol);
-                // goomba->worldCol += goomba->colVelocity;
                 goomba->colVelocity = -goomba->colVelocity;
                 return;
             }
@@ -346,9 +339,6 @@ void GOOMBACheckCollisionWithCollisionMap(ENEMY* goomba) {
             && (Level1CollisionMapBitmap[OFFSET(i, SHIFTDOWN(goomba->worldRow) + goomba->height - 1, 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(i, SHIFTDOWN(goomba->worldRow) + goomba->height - 1, 2816)] == 0x03E0)) {
                 continue;
             } else {
-                // i--;
-                // goomba->colVelocity = (SHIFTUP(i) - goomba->worldCol);
-                // goomba->worldCol += goomba->colVelocity;
                 goomba->colVelocity = -goomba->colVelocity;
                 return;
             }
@@ -358,38 +348,6 @@ void GOOMBACheckCollisionWithCollisionMap(ENEMY* goomba) {
     if (SHIFTDOWN(goomba->worldCol) <= 0) {
         goomba->colVelocity = -goomba->colVelocity;
     }
-
-    // if (goomba->rowVelocity > 0) { //moving down
-    //     for (int i = SHIFTDOWN(goomba->worldRow); i < SHIFTDOWN(goomba->worldRow + goomba->rowVelocity); i++) {
-    //         if (Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(goomba->worldCol), i + goomba->height - 1, 2816)] == 0x7FFF
-    //         && Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(goomba->worldCol) + goomba->width - 2, i + goomba->height - 1, 2816)] == 0x7FFF) {
-    //             continue;
-    //         } else {
-    //             goomba->rowVelocity = (SHIFTUP(i) - goomba->worldRow) - 64;
-    //             goomba->worldRow += goomba->rowVelocity;
-    //             goomba->rowVelocity = 0;
-    //         }
-    //     }
-    // }
-
-    // // if (Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(goomba->worldCol), SHIFTDOWN(goomba->worldRow) + 1 + goomba->height - 1, 2816)] == 0x7FFF
-    // //     && Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(goomba->worldCol) + goomba->width - 1, SHIFTDOWN(goomba->worldRow) + 1 + goomba->height - 1, 2816)] == 0x7FFF) {
-    // // }
-
-    // if (goomba->rowVelocity < 0) {//moving up
-    //     for (int i = SHIFTDOWN(goomba->worldRow); i > SHIFTDOWN(goomba->worldRow + goomba->rowVelocity); i--) {
-    //         if ((Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(goomba->worldCol), i, 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(goomba->worldCol), i, 2816)] == 0x03E0)
-    //         && Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(goomba->worldCol) + goomba->width - 2, i, 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(goomba->worldCol) + goomba->width - 2, i, 2816)] == 0x03E0) {
-    //             continue;
-    //         } else {
-    //             goomba->rowVelocity = (SHIFTUP(i) - goomba->worldRow);  
-    //         }
-    //     }
-    // }
-
-    // if (SHIFTDOWN(goomba->worldRow) + goomba->height >= 256) {
-    //     goomba->active = false;
-    // }
     
 }
 
@@ -435,7 +393,7 @@ void spawnItem(int worldCol, int worldRow, int type) {
 
             switch(type) {
                 case COIN:
-                    items[i].colVelocity = 0;
+                    items[i].colVelocity = SHIFTUP(1);
                 break;
                 case MUSHROOM:
                     items[i].colVelocity = SHIFTUP(1);
@@ -447,150 +405,6 @@ void spawnItem(int worldCol, int worldRow, int type) {
             return;
         }
     }
-}
-
-void updateItems() {
-    for (int i = 0; i < ITEMCOUNT; i++) {
-        if (items[i].active) {
-            items[i].active = true;
-            ITEMCheckCollisionWithCollisionMap(&items[i]);
-            ITEMCheckCollisionWithItemBlocks(&items[i]);
-            if (items[i].grounded) {
-                items[i].rowVelocity = 0;
-            } else {
-                items[i].rowVelocity += GRAVITY;
-            }
-            items[i].worldCol += items[i].colVelocity;
-        }
-    }
-}
-
-void ITEMCheckCollisionWithItemBlocks(ITEM* item) {
-    for (int i = 0; i < ITEMBLOCKCOUNT; i++) {
-        if (((SHIFTDOWN(itemBlocks[i].worldCol) - player.hOff) < SCREENWIDTH  && (SHIFTDOWN(itemBlocks[i].worldCol) - player.hOff) + itemBlocks[i].width > 0)
-        && ((SHIFTDOWN(itemBlocks[i].worldRow) - player.vOff) < SCREENHEIGHT  && (SHIFTDOWN(itemBlocks[i].worldRow) - player.vOff) > 0)) { //this means it's on the screen
-            if (item->rowVelocity < 0) { // moving up
-                    for (int j = SHIFTDOWN(item->worldRow); j > SHIFTDOWN(item->worldRow + item->rowVelocity); j--) {
-                        if (collision(SHIFTDOWN(item->worldCol),j, item->width, item->height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
-                            //if this is true, you collided from the bottom
-                            j++;
-                            item->rowVelocity = (SHIFTUP(j) - item->worldRow); 
-                            item->worldRow += item->rowVelocity;
-                            item->rowVelocity = 0;
-                            item->grounded = true;
-                            itemBlocks[i].hit = true;
-                            break;
-                        }
-                    }
-            }
-            if (item->colVelocity > 0) { // moving right
-                for (int j = SHIFTDOWN(item->worldCol); j < SHIFTDOWN(item->worldCol + item->colVelocity); j++) {
-                    if (collision(j,SHIFTDOWN(item->worldRow), item->width, item->height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
-                        //if this is true, you collided from the left
-                        j--;
-                        item->colVelocity = (SHIFTUP(j) - item->worldCol);
-                        item->worldCol += item->colVelocity;
-                        item->colVelocity = 0;
-                        return;
-                    }
-                }
-            }
-            if (item->colVelocity < 0) { //moving left
-                for (int j = SHIFTDOWN(item->worldCol); j > SHIFTDOWN(item->worldCol + item->colVelocity) && i > 0; j--) {
-                    if (collision(j,SHIFTDOWN(item->worldRow), item->width, item->height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
-                        //if this is true, you collided from the right
-                        j++;
-                        item->colVelocity = (SHIFTUP(j) - item->worldCol);
-                        item->worldCol += item->colVelocity;
-                        item->colVelocity = 0;
-                        break;
-                    }
-                }
-            }
-
-            if (item->rowVelocity > 0) { // moving down
-                for (int j = SHIFTDOWN(item->worldRow); j < SHIFTDOWN(item->worldRow + item->rowVelocity); j++) {
-                    if (collision(SHIFTDOWN(item->worldCol),j, item->width, item->height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
-                        //if this is true, you collided from the top
-                        j--;
-                        item->rowVelocity = (SHIFTUP(j) - item->worldRow);
-                        item->worldRow += item->rowVelocity;
-                        item->rowVelocity = 0;
-                        item->grounded = true;
-                        break;
-                    }
-                }
-            }
-            if (SHIFTDOWN(item->worldRow) < SHIFTDOWN(itemBlocks[i].worldRow)) {
-                if (collision(SHIFTDOWN(item->worldCol), SHIFTDOWN(item->worldRow) + 1, item->width, item->height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
-                    item->grounded = true;
-                }
-            } 
-        } 
-    }
-}
-void ITEMCheckCollisionWithCollisionMap(ITEM* item) {
-    //0x03E0 means green (can go through from bottom, can't go through from top)
-    //0x7FFF means white
-    if (item->colVelocity > 0) { //moving right
-        for (int i = SHIFTDOWN(item->worldCol); i < SHIFTDOWN(item->worldCol + item->colVelocity); i++) {
-            if ((Level1CollisionMapBitmap[OFFSET(i + item->width - 1, SHIFTDOWN(item->worldRow), 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(i + item->width - 1, SHIFTDOWN(item->worldRow), 2816)] == 0x03E0)
-            && (Level1CollisionMapBitmap[OFFSET(i + item->width - 1, SHIFTDOWN(item->worldRow) + item->height - 1, 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(i + item->width - 1, SHIFTDOWN(item->worldRow) + item->height - 1, 2816)] == 0x03E0)) {
-                continue;
-            } else {
-                item->colVelocity = (SHIFTUP(i) - item->worldCol);
-                item->worldCol += item->colVelocity;
-                item->colVelocity = -item->colVelocity;
-            }
-        }
-    }
-    if (item->colVelocity < 0) { //moving left
-        for (int i = SHIFTDOWN(item->worldCol); i > SHIFTDOWN(item->worldCol + item->colVelocity) && i > 0; i--) {
-            if ((Level1CollisionMapBitmap[OFFSET(i, SHIFTDOWN(item->worldRow), 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(i, SHIFTDOWN(item->worldRow), 2816)] == 0x03E0)
-            && (Level1CollisionMapBitmap[OFFSET(i, SHIFTDOWN(item->worldRow) + item->height - 1, 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(i, SHIFTDOWN(item->worldRow) + item->height - 1, 2816)] == 0x03E0)) {
-                continue;
-            } else {
-                item->colVelocity = (SHIFTUP(i) - item->worldCol) + 64;
-                item->worldCol += item->colVelocity;
-                item->colVelocity = -item->colVelocity;
-            }
-        }
-    }
-
-    if (item->rowVelocity > 0) { //moving down
-        for (int i = SHIFTDOWN(item->worldRow); i < SHIFTDOWN(item->worldRow + item->rowVelocity); i++) {
-            if (Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(item->worldCol), i + item->height - 1, 2816)] == 0x7FFF
-            && Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(item->worldCol) + item->width - 2, i + item->height - 1, 2816)] == 0x7FFF) {
-                continue;
-            } else {
-                item->rowVelocity = (SHIFTUP(i) - item->worldRow) - 64;
-                item->worldRow += item->rowVelocity;
-                item->rowVelocity = 0;
-                item->grounded = true;
-            }
-        }
-    }
-
-    if (Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(item->worldCol), SHIFTDOWN(item->worldRow) + 1 + item->height - 1, 2816)] == 0x7FFF
-        && Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(item->worldCol) + item->width - 1, SHIFTDOWN(item->worldRow) + 1 + item->height - 1, 2816)] == 0x7FFF) {
-        item->grounded = false;
-    }
-
-    if (item->rowVelocity < 0) {//moving up
-        for (int i = SHIFTDOWN(item->worldRow); i > SHIFTDOWN(item->worldRow + item->rowVelocity); i--) {
-            if ((Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(item->worldCol), i, 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(item->worldCol), i, 2816)] == 0x03E0)
-            && (Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(item->worldCol) + item->width - 2, i, 2816)] == 0x7FFF || Level1CollisionMapBitmap[OFFSET(SHIFTDOWN(item->worldCol) + item->width - 2, i, 2816)] == 0x03E0)) {
-                continue;
-            } else {
-                item->rowVelocity = (SHIFTUP(i) - item->worldRow);  
-            }
-        }
-    }
-
-    if (SHIFTDOWN(item->worldRow) + item->height >= 256) {
-        item->active = false;
-    }
-    
 }
 
 void drawEnemies() {
@@ -722,4 +536,25 @@ void drawFireBalls() {
         }
     }
     
+}
+
+void drawCoinCount() {
+     //coin ui
+    shadowOAM[124].attr0 = (ROWMASK & (0)) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR;
+    shadowOAM[124].attr1 = (COLMASK & (208)) | ATTR1_TINY;
+    shadowOAM[124].attr2 = ATTR2_TILEID(22, 0) | ATTR2_PRIORITY(0) | ATTR2_PALROW(1);
+
+    // times symbol
+    shadowOAM[125].attr0 = (ROWMASK & (0)) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR;
+    shadowOAM[125].attr1 = (COLMASK & (216)) | ATTR1_TINY;
+    shadowOAM[125].attr2 = ATTR2_TILEID(22, 1) | ATTR2_PRIORITY(0) | ATTR2_PALROW(1);
+    
+    int onesPlace = player.coinCount / 10;
+    int tensPlace = player.coinCount % 10;
+    shadowOAM[126].attr0 = (ROWMASK & (0)) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR;
+    shadowOAM[126].attr1 = (COLMASK & (224)) | ATTR1_TINY;
+    shadowOAM[126].attr2 = ATTR2_TILEID(21, onesPlace) | ATTR2_PRIORITY(0) | ATTR2_PALROW(1);
+    shadowOAM[127].attr0 = (ROWMASK & (0)) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR;
+    shadowOAM[127].attr1 = (COLMASK & (232)) | ATTR1_TINY;
+    shadowOAM[127].attr2 = ATTR2_TILEID(21, tensPlace) | ATTR2_PRIORITY(0) | ATTR2_PALROW(1);
 }

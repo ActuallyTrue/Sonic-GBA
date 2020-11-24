@@ -53,8 +53,6 @@ enum {GOOMBA, CHOMPER};
 
 void initializeItemBlocks();
 void updateItemBlocks();
-void ITEMCheckCollisionWithItemBlocks(ITEM* item);
-void ITEMCheckCollisionWithCollisionMap(ITEM* item);
 void GOOMBACheckCollisionWithEnemies(ENEMY* goomba);
 void GOOMBACheckCollisionWithCollisionMap(ENEMY* goomba);
 void FIREBALLCheckCollisionWithItemBlocks(ITEM* fireBall);
@@ -73,7 +71,7 @@ void drawGoomba(ENEMY* goomba, int index);
 void updateGoomba(ENEMY* goomba);
 void updateChomper(ENEMY* chomper);
 void spawnItem();
-void updateItems();
 void drawItems();
 void drawGoal();
 void drawFireBalls();
+void drawCoinCount();

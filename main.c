@@ -1,3 +1,19 @@
+/*
+I got the XL background working, music for all screens except pause, sounds for jumping,
+shooting fireballs, powering up, powering down, collecting a coin, pausing, dying.
+
+Added 2 enemies: chompers and goombas
+Chompers are invincible and they hurt you if you touch them
+Goombas will hurt you if you touch them from the sides, but if you land on them you'll kill them.
+
+Added a cheat were you can fly by holding R
+
+The item boxes are a little buggy, if you really try you can phase through them or get stuck in them.
+They also shift to the left or the right depending on which way you're moving but they snap into place once you stop moving.
+
+The instructions for the game are on the instructions screen, but the main goal is to get the star
+at the end of the level.
+*/
 #include <stdlib.h>
 #include <stdio.h>
 #include "myLib.h"
@@ -15,6 +31,9 @@
 #include "titleSong.h"
 #include "winSong.h"
 #include "pauseSound.h"
+#include "entities.h"
+
+#define INSTRUCTIONCOUNT 4
 
 // Prototypes
 void initialize();
@@ -24,6 +43,8 @@ void goToStart();
 void start();
 void goToInstructions();
 void instructions();
+void updateInstructions();
+void drawInstructions();
 void goToGame();
 void game();
 void goToPause();
@@ -32,6 +53,8 @@ void goToWin();
 void win();
 void goToLose();
 void lose();
+
+MARIO instructionSprites[INSTRUCTIONCOUNT];
 
 // States
 enum
@@ -127,6 +150,8 @@ void start() {
 }
 
 void goToInstructions() {
+    //this is just so the sprites show up, sorry, I was in a rush ^^'''
+    initializeGame();
     REG_BG0HOFF = 0;
     REG_BG0VOFF = 0;
     REG_BG0CNT = BG_CHARBLOCK(0) | BG_8BPP | BG_SIZE_SMALL | BG_SCREENBLOCK(24);
@@ -137,12 +162,83 @@ void goToInstructions() {
 }
 
 void instructions() {
+    updateInstructions();
+    drawInstructions();
+    waitForVBlank();
+    copyShadowOAM();
     if (BUTTON_PRESSED(BUTTON_START)) {
         stopSound();
         playSoundA(gameSong_data, gameSong_length, 1);
         initializeGame();
         initializeBackground();
         goToGame();
+    }
+}
+
+void updateInstructions() {
+    for (int i = 0; i < INSTRUCTIONCOUNT; i++) {
+        switch(i) {
+            case 0: //walking mario
+                instructionSprites[i].aniCounter++;
+                instructionSprites[i].worldCol = 112;
+                instructionSprites[i].worldRow = 56;
+                instructionSprites[i].numFrames = WALKFRAMES;
+                instructionSprites[i].aniState = WALK;
+                if (instructionSprites[i].aniCounter % 7 == 0) {
+                    if (++instructionSprites[i].curFrame >= instructionSprites[i].numFrames) {
+                        instructionSprites[i].curFrame = 0;
+                    }
+                }
+            break;
+            case 1: // jumping mario
+                instructionSprites[i].worldCol = 96;
+                instructionSprites[i].worldRow = 84;
+                instructionSprites[i].curFrame = 0;
+                instructionSprites[i].aniState = JUMP;
+            break;
+            case 2: // running mario
+                instructionSprites[i].aniCounter++;
+                instructionSprites[i].worldCol = 88;
+                instructionSprites[i].worldRow = 100;
+                instructionSprites[i].numFrames = WALKFRAMES;
+                instructionSprites[i].aniState = WALK;
+                if (instructionSprites[i].aniCounter % 5 == 0) {
+                    if (++instructionSprites[i].curFrame >= instructionSprites[i].numFrames) {
+                        instructionSprites[i].curFrame = 0;
+                    }
+                }
+            break;
+            case 3: //fireball
+                instructionSprites[i].worldCol = 136;
+                instructionSprites[i].worldRow = 104;
+            break;
+        }
+    }
+}
+void drawInstructions() {
+    for (int i = 0; i < INSTRUCTIONCOUNT; i++) {
+        switch(i) {
+            case 0: //walking mario
+                shadowOAM[i].attr0 = (ROWMASK & (instructionSprites[i].worldRow)) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR;
+                shadowOAM[i].attr1 = (COLMASK & (instructionSprites[i].worldCol)) | ATTR1_SMALL; 
+                shadowOAM[i].attr2 = ATTR2_TILEID(instructionSprites[i].aniState * 2, instructionSprites[i].curFrame * 2) | ATTR2_PRIORITY(0) | ATTR2_PALROW(0);
+            break;
+            case 1: // jumping mario
+                shadowOAM[i].attr0 = (ROWMASK & (instructionSprites[i].worldRow)) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR;
+                shadowOAM[i].attr1 = (COLMASK & (instructionSprites[i].worldCol)) | ATTR1_SMALL; 
+                shadowOAM[i].attr2 = ATTR2_TILEID(instructionSprites[i].aniState * 2, instructionSprites[i].curFrame * 2) | ATTR2_PRIORITY(0) | ATTR2_PALROW(0);
+            break;
+            case 2: // running mario
+                shadowOAM[i].attr0 = (ROWMASK & (instructionSprites[i].worldRow)) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR;
+                shadowOAM[i].attr1 = (COLMASK & (instructionSprites[i].worldCol)) | ATTR1_SMALL; 
+                shadowOAM[i].attr2 = ATTR2_TILEID(instructionSprites[i].aniState * 2, instructionSprites[i].curFrame * 2) | ATTR2_PRIORITY(0) | ATTR2_PALROW(0);
+            break;
+            case 3: //fireball
+                shadowOAM[i].attr0 = (ROWMASK & (instructionSprites[i].worldRow)) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR;
+                shadowOAM[i].attr1 = (COLMASK & (instructionSprites[i].worldCol)) | ATTR1_TINY; 
+                shadowOAM[i].attr2 = ATTR2_TILEID(29, 0) | ATTR2_PRIORITY(0) | ATTR2_PALROW(0);
+            break;
+        }
     }
 }
 

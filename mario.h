@@ -37,7 +37,11 @@ typedef struct {
     short powerUpState;
     short invincible;
     int invincibilityCounter;
+    int coinCount;
 } MARIO;
+
+//animation states
+enum {IDLE, WALK, JUMP};
 
 extern MARIO player;
 void initializeMario();

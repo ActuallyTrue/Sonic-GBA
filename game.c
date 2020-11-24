@@ -9,7 +9,6 @@ int currentTileMapDivision = 0;
 short shouldWin;
 short shouldLose;
 void updateGame() {
-    updateItems();
     updatePlayer();
     updateEnemies();
     updateItemBlocks();
@@ -27,6 +26,7 @@ void drawGame() {
     drawEnemies();
     drawGoal();
     drawFireBalls();
+    drawCoinCount();
 }
 
 void initializeGame() {
