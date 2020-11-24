@@ -4,12 +4,23 @@
 #include "Level1CollisionMap.h"
 #include "game.h"
 #include "entities.h"
+#include "sound.h"
+#include "fireBallSound.h"
+#include "coinSound.h"
+#include "itemSpawnSound.h"
+#include "jumpSound.h"
+#include "pauseSound.h"
+#include "powerDownSound.h"
+#include "powerUpSound.h"
+
 
 MARIO player;
 enum {IDLE, WALK, JUMP,  END};
 enum {NORMAL, BIG};
 
-void initializeSonic() {
+void checkCollisionWithGoombas(ENEMY* goomba);
+
+void initializeMario() {
     copyToSpritePaletteMem(mariospritesheetPal, mariospritesheetPalLen >> 1);
     copyToCharBlock(mariospritesheetTiles, 4, mariospritesheetTilesLen >> 1);
     player.height = 16;
@@ -22,11 +33,35 @@ void initializeSonic() {
     player.hOff = hOff;
     player.vOff = vOff;
     player.powerUpState = NORMAL;
+    player.invincible = false;
+    player.invincibilityCounter = 0;
+    player.hide = false;
 }
 
 void updateMario() {
+
+    checkCollisionWithGoal();
     // Control movement
     short moveInput = false;
+
+    if (BUTTON_PRESSED(BUTTON_B) && player.powerUpState == FIREFLOWER) {
+        for (int i = 0; i < FIREBALLCOUNT; i++) {
+            if (!fireBalls[i].active) {
+                playSoundB(fireBallSound_data, fireBallSound_length, false);
+                fireBalls[i].active = true;
+                if (player.flip) {
+                    fireBalls[i].worldCol = SHIFTUP(SHIFTDOWN(player.worldCol) + player.width);
+                    fireBalls[i].colVelocity = SHIFTUP(3);
+                } else {
+                    fireBalls[i].worldCol = player.worldCol;
+                    fireBalls[i].colVelocity = -SHIFTUP(3);
+                }
+                fireBalls[i].worldRow = player.worldRow;
+                fireBalls[i].rowVelocity = SHIFTUP(1);
+                break;
+            }
+        }
+    }
 
     if (BUTTON_HELD(BUTTON_B)) {
         player.running = true;
@@ -123,28 +158,45 @@ void updateMario() {
         }
         
     }
-    if (BUTTON_PRESSED(BUTTON_A) && player.grounded) {
+    checkCollisionWithMap();
+    checkCollisionWithItemBlocks();
+    if (!player.invincible) {
+        checkCollisionWithEnemies();
+    } else {
+        if (player.invincibilityCounter % 2 == 0) {
+            player.hide = !player.hide;
+        }
+        if (player.invincibilityCounter > 90) {
+            player.invincible = false;
+            player.hide = false;
+            player.invincibilityCounter = 0;
+        } else {
+            player.invincibilityCounter++;
+        }
+    }
+    short cheating = false;
+    if (BUTTON_HELD(BUTTON_R)) {
+        cheating = true;
+        player.rowVelocity = -SHIFTUP(1);
         player.grounded = false;
-        player.rowVelocity = player.rowVelocity - JUMPFORCE;
+        player.rowVelocity = -JUMPFORCE;
+        player.aniState = JUMP;
+        player.numFrames = 0;
+    }
+    if (!cheating && BUTTON_PRESSED(BUTTON_A) && player.grounded) {
+        playSoundB(jumpSound_data, jumpSound_length, false);
+        player.grounded = false;
+        player.rowVelocity = -JUMPFORCE;
         player.aniState = JUMP;
         player.numFrames = 0;
     }
 
-    if (BUTTON_RELEASED(BUTTON_A) && !player.grounded) {
+    if (!cheating && BUTTON_RELEASED(BUTTON_A) && !player.grounded) {
         if (player.rowVelocity < -4 * 64) {
             player.rowVelocity = -4 * 64;
         }
     }
-
-    // boundary checks
-    if (player.worldCol < 0) { 
-        player.worldCol = 0;
-        if (player.colVelocity != 0) {
-            player.colVelocity = 0;
-        }
-    }
-    checkCollisionWithMap();
-    checkCollisionWithItemBlocks();
+    
 
     if (player.grounded) {
         player.rowVelocity = 0;
@@ -155,9 +207,28 @@ void updateMario() {
     } else {
         player.aniState = JUMP;
         player.numFrames = 0;
-         player.rowVelocity += GRAVITY;
+        if (!cheating) {
+            player.rowVelocity += GRAVITY;
+        }
     }
 
+    checkCollisionWithMap();
+    checkCollisionWithItemBlocks();
+
+    // boundary checks
+    if (player.worldCol < 0) { 
+        player.worldCol = 0;
+        if (player.colVelocity != 0) {
+            player.colVelocity = 0;
+        }
+    }
+
+    if (player.worldRow  + player.rowVelocity < 0) { 
+        player.worldRow = 0;
+        if (player.rowVelocity != 0) {
+            player.rowVelocity = 0;
+        }
+    }
     
 
     player.worldCol += player.colVelocity;
@@ -258,6 +329,12 @@ void adjustScreenOffset() {
     
 }
 
+void downToNormal() {
+    player.powerUpState = NORMAL;
+    player.width = 16;
+    player.height = 16;
+}
+
 void advanceToMushroom() {
     player.powerUpState = BIG;
     player.width = 16;
@@ -265,6 +342,8 @@ void advanceToMushroom() {
 }
 void advanceToFireFlower() {
     player.powerUpState = FIREFLOWER;
+    player.width = 16;
+    player.height = 27;
 }
 
 void checkCollisionWithItems() {
@@ -272,13 +351,18 @@ void checkCollisionWithItems() {
         if (items[i].active) {
             if (collision(SHIFTDOWN(player.worldCol), SHIFTDOWN(player.worldRow), player.width, player.height, SHIFTDOWN(items[i].worldCol), SHIFTDOWN(items[i].worldRow), items[i].width, items[i].height)) {
                 items[i].active = false;
+                items[i].worldCol = 0;
+                items[i].worldRow = 0;
                 switch(items[i].type) {
                     case COIN:
+                        playSoundB(coinSound_data, coinSound_length, false);
                     break;
                     case MUSHROOM:
+                        playSoundB(powerUpSound_data, powerUpSound_length, false);
                         advanceToMushroom();
                     break;
                     case FIREFLOWER:
+                        playSoundB(powerUpSound_data, powerUpSound_length, false);
                         advanceToFireFlower();
                     break;
                 }
@@ -291,20 +375,6 @@ void checkCollisionWithItemBlocks() {
     for (int i = 0; i < ITEMBLOCKCOUNT; i++) {
         if (((SHIFTDOWN(itemBlocks[i].worldCol) - player.hOff) < SCREENWIDTH  && (SHIFTDOWN(itemBlocks[i].worldCol) - player.hOff) + itemBlocks[i].width > 0)
         && ((SHIFTDOWN(itemBlocks[i].worldRow) - player.vOff) < SCREENHEIGHT  && (SHIFTDOWN(itemBlocks[i].worldRow) - player.vOff) > 0)) { //this means it's on the screen
-            if (player.rowVelocity < 0) { // moving up
-                    for (int j = SHIFTDOWN(player.worldRow); j > SHIFTDOWN(player.worldRow + player.rowVelocity); j--) {
-                        if (collision(SHIFTDOWN(player.worldCol),j, player.width, player.height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
-                            //if this is true, you collided from the bottom
-                            j++;
-                            player.rowVelocity = (SHIFTUP(j) - player.worldRow); 
-                            player.worldRow += player.rowVelocity;
-                            player.rowVelocity = 0;
-                            player.grounded = true;
-                            itemBlocks[i].hit = true;
-                            break;
-                        }
-                    }
-            }
             if (player.colVelocity > 0) { // moving right
                 for (int j = SHIFTDOWN(player.worldCol); j < SHIFTDOWN(player.worldCol + player.colVelocity); j++) {
                     if (collision(j,SHIFTDOWN(player.worldRow),player.width, player.height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
@@ -318,16 +388,33 @@ void checkCollisionWithItemBlocks() {
                 }
             }
             if (player.colVelocity < 0) { //moving left
-                for (int j = SHIFTDOWN(player.worldCol); j > SHIFTDOWN(player.worldCol + player.colVelocity) && i > 0; j--) {
+                for (int j = SHIFTDOWN(player.worldCol); j > SHIFTDOWN(player.worldCol + player.colVelocity) && j > 0; j--) {
                     if (collision(j,SHIFTDOWN(player.worldRow), player.width, player.height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
                         //if this is true, you collided from the right
                         j++;
                         player.colVelocity = (SHIFTUP(j) - player.worldCol);
                         player.worldCol += player.colVelocity;
                         player.colVelocity = 0;
-                        break;
+                        return;
                     }
                 }
+            }
+            if (player.rowVelocity < 0) { // moving up
+                    for (int j = SHIFTDOWN(player.worldRow); j > SHIFTDOWN(player.worldRow + player.rowVelocity); j--) {
+                        if (collision(SHIFTDOWN(player.worldCol), j, player.width, player.height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
+                            //if this is true, you collided from the bottom
+                            j++;
+                            player.rowVelocity = (SHIFTUP(j) - player.worldRow); 
+                            player.worldRow += player.rowVelocity;
+                            if (collision(SHIFTDOWN(player.worldCol), SHIFTDOWN(player.worldRow), player.width, player.height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
+                                player.worldRow = SHIFTUP(SHIFTDOWN(itemBlocks[i].worldRow) + itemBlocks[i].height + 1);
+                            }
+                            player.rowVelocity = SHIFTUP(1);
+                            itemBlocks[i].hit = true;
+                            playSoundB(itemSpawnSound_data, itemSpawnSound_length, false);
+                            return;
+                        }
+                    }
             }
 
             if (player.rowVelocity > 0) { // moving down
@@ -339,13 +426,16 @@ void checkCollisionWithItemBlocks() {
                         player.worldRow += player.rowVelocity;
                         player.rowVelocity = 0;
                         player.grounded = true;
-                        break;
+                        return;
                     }
                 }
             }
             if (SHIFTDOWN(player.worldRow) < SHIFTDOWN(itemBlocks[i].worldRow)) {
                 if (collision(SHIFTDOWN(player.worldCol), SHIFTDOWN(player.worldRow) + 1, player.width, player.height, SHIFTDOWN(itemBlocks[i].worldCol), SHIFTDOWN(itemBlocks[i].worldRow), itemBlocks[i].width, itemBlocks[i].height)) {
+                    //player.worldRow = SHIFTUP(SHIFTDOWN(itemBlocks[i].worldRow) - player.height);
+                    //player.rowVelocity = 0;
                     player.grounded = true;
+                    return;
                 }
             } 
         } 
@@ -416,19 +506,145 @@ void checkCollisionWithMap() {
     
 }
 
+void checkCollisionWithEnemies() {
+    for (int i = 0; i < ENEMYCOUNT; i++) {
+        switch (enemies[i].type) {
+            case GOOMBA:
+                checkCollisionWithGoombas(&enemies[i]);
+            break;
+            case CHOMPER:
+                if (collision(SHIFTDOWN(player.worldCol), SHIFTDOWN(player.worldRow) + 1, player.width, player.height, SHIFTDOWN(enemies[i].worldCol), SHIFTDOWN(enemies[i].worldRow),
+                 enemies[i].width, enemies[i].height)) {
+                    takeDamage();
+                }
+            break;
+        }
+    }
+}
+
+void checkCollisionWithGoombas(ENEMY* goomba) {
+    if (((SHIFTDOWN(goomba->worldCol) - player.hOff) < SCREENWIDTH  && (SHIFTDOWN(goomba->worldCol) - player.hOff) + goomba->width > 0)
+        && ((SHIFTDOWN(goomba->worldRow) - player.vOff) < SCREENHEIGHT  && (SHIFTDOWN(goomba->worldRow) - player.vOff) > 0)) { //this means it's on the screen
+
+            if (player.rowVelocity > 0) { // moving down
+                for (int j = SHIFTDOWN(player.worldRow); j < SHIFTDOWN(player.worldRow + player.rowVelocity); j++) {
+                    if (collision(SHIFTDOWN(player.worldCol),j, player.width, player.height, SHIFTDOWN(goomba->worldCol), SHIFTDOWN(goomba->worldRow), goomba->width, goomba->height)) {
+                        //if this is true, you collided from the top
+                        if (BUTTON_HELD(BUTTON_A)) {
+                            player.grounded = false;
+                            player.rowVelocity = -(JUMPFORCE + JUMPFORCE/9);
+                            player.aniState = JUMP;
+                            player.numFrames = 0;
+                            playSoundB(jumpSound_data, jumpSound_length, false);
+                        } else {
+                            player.grounded = false;
+                            player.rowVelocity = -(JUMPFORCE/2);
+                            player.aniState = JUMP;
+                            player.numFrames = 0;
+                            playSoundB(jumpSound_data, jumpSound_length, false);
+                        }
+                        killEnemy(goomba);
+                        return;
+                    }
+                }
+            }
+
+            if (SHIFTDOWN(player.worldRow) < SHIFTDOWN(goomba->worldRow)) {
+                if (collision(SHIFTDOWN(player.worldCol), SHIFTDOWN(player.worldRow) + 1, player.width, player.height, SHIFTDOWN(goomba->worldCol), SHIFTDOWN(goomba->worldRow), goomba->width, goomba->height)) {
+                    if (BUTTON_HELD(BUTTON_A)) {
+                        player.grounded = false;
+                        player.rowVelocity = -(JUMPFORCE + JUMPFORCE/9);
+                        player.aniState = JUMP;
+                        player.numFrames = 0;
+                    } else {
+                        player.grounded = false;
+                        player.rowVelocity = -(JUMPFORCE/2);
+                        player.aniState = JUMP;
+                        player.numFrames = 0;
+                    }
+                    killEnemy(goomba);
+                    return;
+                }
+            } 
+
+            if (player.rowVelocity < 0) { // moving up
+                    for (int j = SHIFTDOWN(player.worldRow); j > SHIFTDOWN(player.worldRow + player.rowVelocity); j--) {
+                        if (collision(SHIFTDOWN(player.worldCol),j, player.width, player.height, SHIFTDOWN(goomba->worldCol), SHIFTDOWN(goomba->worldRow), goomba->width, goomba->height)) {
+                            //if this is true, you collided from the bottom
+                            takeDamage();
+                            break;
+                        }
+                    }
+            }
+            if (player.colVelocity > 0) { // moving right
+                for (int j = SHIFTDOWN(player.worldCol); j < SHIFTDOWN(player.worldCol + player.colVelocity); j++) {
+                    if (collision(j,SHIFTDOWN(player.worldRow),player.width, player.height, SHIFTDOWN(goomba->worldCol), SHIFTDOWN(goomba->worldRow), goomba->width, goomba->height)) {
+                        //if this is true, you collided from the left
+                        takeDamage();
+                        return;
+                    }
+                }
+            }
+            if (player.colVelocity < 0) { //moving left
+                for (int j = SHIFTDOWN(player.worldCol); j > SHIFTDOWN(player.worldCol + player.colVelocity) && j > 0; j--) {
+                    if (collision(j,SHIFTDOWN(player.worldRow), player.width, player.height, SHIFTDOWN(goomba->worldCol), SHIFTDOWN(goomba->worldRow), goomba->width, goomba->height)) {
+                        //if this is true, you collided from the right
+                        takeDamage();
+                        break;
+                    }
+                }
+            }
+        } 
+}
+
+void checkCollisionWithGoal() {
+    if (collision(SHIFTDOWN(player.worldCol), SHIFTDOWN(player.worldRow), player.width, player.height, SHIFTDOWN(goal.worldCol), SHIFTDOWN(goal.worldRow), goal.width, goal.height)) {
+        shouldWin = true;
+    }
+}
+void takeDamage() {
+    player.invincible = true;
+    switch (player.powerUpState) {
+        case NORMAL:
+            shouldLose = true;
+        break;
+        case MUSHROOM:
+            playSoundB(powerDownSound_data, powerDownSound_length, false);
+            downToNormal();   
+        break;
+        case FIREFLOWER:
+            playSoundB(powerDownSound_data, powerDownSound_length, false);
+            advanceToMushroom();
+        break;
+    }
+}
+
 void drawMario() {
     switch(player.powerUpState) {
         case NORMAL:
-            shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR;
-	        shadowOAM[0].attr1 = (COLMASK & (SHIFTDOWN(player.worldCol) - hOff) % 256) | ATTR1_SMALL;
+            if(player.hide) {
+                shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR | ATTR0_HIDE;
+            } else {
+                shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_SQUARE | ATTR0_4BPP | ATTR0_REGULAR;
+            }
+	        shadowOAM[0].attr1 = (COLMASK & (SHIFTDOWN(player.worldCol) - hOff) % 256) | ATTR1_SMALL; 
             shadowOAM[0].attr2 = ATTR2_TILEID(player.aniState * 2, player.curFrame * 2) | ATTR2_PRIORITY(0) | ATTR2_PALROW(0);
         break;
         case BIG:
-            shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_TALL | ATTR0_4BPP | ATTR0_REGULAR;
+            if(player.hide) {
+                shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_TALL | ATTR0_4BPP | ATTR0_REGULAR | ATTR0_HIDE;
+            } else {
+                shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_TALL | ATTR0_4BPP | ATTR0_REGULAR;
+            }
 	        shadowOAM[0].attr1 = (COLMASK & (SHIFTDOWN(player.worldCol) - hOff) % 256) | ATTR1_MEDIUM;
             shadowOAM[0].attr2 = ATTR2_TILEID((player.aniState + 4) * 2, player.curFrame * 4) | ATTR2_PRIORITY(0) | ATTR2_PALROW(0);
         break;
         case FIREFLOWER:
+            if(player.hide) {
+                shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_TALL | ATTR0_4BPP | ATTR0_REGULAR | ATTR0_HIDE;
+            } else {
+                shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_TALL | ATTR0_4BPP | ATTR0_REGULAR;
+            }
             shadowOAM[0].attr0 = (ROWMASK & (SHIFTDOWN(player.worldRow) - vOff) % 256) | ATTR0_TALL | ATTR0_4BPP | ATTR0_REGULAR;
 	        shadowOAM[0].attr1 = (COLMASK & (SHIFTDOWN(player.worldCol) - hOff) % 256) | ATTR1_MEDIUM;
             shadowOAM[0].attr2 = ATTR2_TILEID((player.aniState + 4) * 2, player.curFrame * 4) | ATTR2_PRIORITY(0) | ATTR2_PALROW(1);

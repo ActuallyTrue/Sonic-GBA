@@ -11,32 +11,35 @@ short shouldLose;
 void updateGame() {
     updateItems();
     updatePlayer();
+    updateEnemies();
     updateItemBlocks();
+    updateFireBalls();
 }
 
 void updatePlayer() {
     updateMario();
-    // if (player.worldCol > 2709) {
-    //     shouldWin = true;
-    // }
-    // if (player.worldRow > 256) {
-    //     shouldLose = true;
-    // }
 }
 
 void drawGame() {
     drawMario();
     drawItemBlocks();
     drawItems();
+    drawEnemies();
+    drawGoal();
+    drawFireBalls();
 }
 
 void initializeGame() {
     hOff = 0;
     vOff = 0;
+    shouldLose = false;
+    shouldWin = false;
     initializeBackground();
-    initializeSonic();
+    initializeMario();
     initializeItemBlocks();
     initializeItems();
+    initializeEnemies();
+    initializeFireBalls();
 }
 
 void initializeBackground() {
@@ -64,6 +67,7 @@ void lastScreenOffsetAdjustment() {
 
     if (currentScreenBlock == 19 && hOff >= 512 - SCREENWIDTH - 20) {
         hOff = 512 - SCREENWIDTH - 20;
+        player.hOff = 2816 - SCREENWIDTH - 20;
     } else {
         if (hOff >= 256 && currentScreenBlock < 19) {
             currentScreenBlock++;

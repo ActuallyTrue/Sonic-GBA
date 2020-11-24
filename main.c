@@ -9,6 +9,12 @@
 #include "loseScreen.h"
 #include "pauseScreen.h"
 #include "Level1.h"
+#include "sound.h"
+#include "gameSong.h"
+#include "gameOverSound.h"
+#include "titleSong.h"
+#include "winSong.h"
+#include "pauseSound.h"
 
 // Prototypes
 void initialize();
@@ -91,6 +97,9 @@ void initialize()
     buttons = BUTTONS;
     oldButtons = 0;
 
+    setupInterrupts();
+    setupSounds();
+
     goToStart();
 }
 
@@ -105,6 +114,8 @@ void goToStart() {
     copyToScreenBlock(titleScreenMap, 24, titleScreenMapLen >> 1);
     hideSprites();
     copyShadowOAM();
+    stopSound();
+    playSoundA(titleSong_data, titleSong_length, true);
     state = START;
 }
 
@@ -127,6 +138,8 @@ void goToInstructions() {
 
 void instructions() {
     if (BUTTON_PRESSED(BUTTON_START)) {
+        stopSound();
+        playSoundA(gameSong_data, gameSong_length, 1);
         initializeGame();
         initializeBackground();
         goToGame();
@@ -149,13 +162,9 @@ void game() {
     REG_BG0HOFF = hOff;
     REG_BG0VOFF = vOff;
     if (BUTTON_PRESSED(BUTTON_START)) {
-         goToPause();
-    } else if (BUTTON_PRESSED(BUTTON_R)) {
-        goToWin();
-    } else if (BUTTON_PRESSED(BUTTON_L)) {
-        goToLose();
-    }
-    if (shouldWin) {
+        pauseSound();
+        goToPause();
+    } if (shouldWin) {
         goToWin();
     } else if (shouldLose) {
         shouldLose = false;
@@ -167,6 +176,7 @@ void game() {
 void goToPause() {
     REG_BG0HOFF = 0;
     REG_BG0VOFF = 0;
+    playSoundB(pauseSound_data, pauseSound_length, false);
     //sets up background for pause screen
     REG_BG0CNT = BG_CHARBLOCK(0) | BG_8BPP | BG_SIZE_SMALL | BG_SCREENBLOCK(24);
     copyToBGPaletteMem(pauseScreenPal, pauseScreenPalLen >> 1);
@@ -180,6 +190,7 @@ void goToPause() {
 // Runs every frame of the pause state
 void pause() {
     if (BUTTON_PRESSED(BUTTON_START)) {
+        unpauseSound();
         goToGame();
     } else if (BUTTON_PRESSED(BUTTON_SELECT)) {
         goToStart();
@@ -197,6 +208,9 @@ void goToWin() {
     copyToScreenBlock(winScreenMap, 24, winScreenMapLen >> 1);
     hideSprites();
     copyShadowOAM();
+
+    stopSound();
+    playSoundA(winSong_data, winSong_length, 1);
     state = WIN;
 }
 
@@ -219,6 +233,9 @@ void goToLose() {
     copyToScreenBlock(loseScreenMap, 24, loseScreenMapLen >> 1);
     hideSprites();
     copyShadowOAM();
+    stopSound();
+    //playSoundA(loseSong_data, loseSong_length, 1);
+    playSoundB(gameOverSound_data, gameOverSound_length, 0);
     state = LOSE;
 }
 

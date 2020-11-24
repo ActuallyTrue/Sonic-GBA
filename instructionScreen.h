@@ -5,11 +5,11 @@
 //
 //	instructionScreen, 256x256@8, 
 //	+ palette 256 entries, not compressed
-//	+ 385 tiles (t|f|p reduced) not compressed
+//	+ 1024 tiles not compressed
 //	+ regular map (in SBBs), not compressed, 32x32 
-//	Total size: 512 + 24640 + 2048 = 27200
+//	Total size: 512 + 65536 + 2048 = 68096
 //
-//	Time-stamp: 2020-11-03, 20:24:58
+//	Time-stamp: 2020-11-23, 23:30:43
 //	Exported by Cearn's GBA Image Transmogrifier, v0.8.3
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -18,8 +18,8 @@
 #ifndef GRIT_INSTRUCTIONSCREEN_H
 #define GRIT_INSTRUCTIONSCREEN_H
 
-#define instructionScreenTilesLen 24640
-extern const unsigned short instructionScreenTiles[12320];
+#define instructionScreenTilesLen 65536
+extern const unsigned short instructionScreenTiles[32768];
 
 #define instructionScreenMapLen 2048
 extern const unsigned short instructionScreenMap[1024];
